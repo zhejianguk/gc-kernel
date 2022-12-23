@@ -10,6 +10,7 @@
 #include "libraries/ghe.h"
 #include "malloc.h"
 #include "sys/mman.h"
+#include "libraries/gc_top.h"
 
 char* shadow;
 int uart_lock;

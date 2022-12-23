@@ -4,7 +4,7 @@
 
 #define TRUE 0x01
 #define FALSE 0x00
-#define NUM_CORES 8
+
 
 #define GHT_FULL 0x02
 #define GHT_EMPTY 0x01

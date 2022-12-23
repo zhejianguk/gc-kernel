@@ -10,7 +10,7 @@ CFLAGS_CM:= -O3 -DRISCV -march=rv64imafd -Wl,--allow-multiple-definition
 #CFLAGS := -O3 -std=gnu99
 
 gc_main_pmc: gc_main_pmc.c
-	${CC} ${OFLAGS} -c gc_main_pmc.c -lpthread
+	${CC} ${OFLAGS_gc} -c gc_main_pmc.c -lpthread
 
 malloc: malloc.c
 	${CC} ${OFLAGS} -c malloc.c

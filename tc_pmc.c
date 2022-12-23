@@ -8,6 +8,7 @@
 #include "libraries/spin_lock.h"
 #include "libraries/ght.h"
 #include "libraries/ghe.h"
+#include "libraries/gc_top.h"
 
 int uart_lock;
 int if_tasks_initalised[NUM_CORES] = {0};

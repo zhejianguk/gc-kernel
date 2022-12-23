@@ -9,6 +9,8 @@
 #include "libraries/ght.h"
 #include "libraries/ghe.h"
 #include "libraries/deque.h"
+#include "libraries/gc_top.h"
+
 #define GC_Debug 0 
 
 int uart_lock;
