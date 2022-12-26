@@ -20,7 +20,7 @@
  /* Apply the destructor attribute to myCleanupFun() so that it
     is executed after main() */
  void gcCleanup (void) __attribute__ ((destructor));
- 
+
 int agg_core_id = 0x08;
 pthread_t threads[NUM_CORES-1];
 int if_tasks_initalised[NUM_CORES] = {0};
@@ -42,7 +42,7 @@ void* thread_pmc(void* args){
 	while (ghe_checkght_status() != 0x02) {
 		while (ghe_status() != GHE_EMPTY){
 			ROCC_INSTRUCTION (1, 0x0D);
-			perfc++;
+			perfc = perfc + 1;
 		}
 	}
 	//=================== Post execution ===================//
@@ -58,8 +58,8 @@ void gcStartup (void)
     //================== Initialisation ==================//
     // Bound current thread to BOOM
     if (gc_pthread_setaffinity(BOOM_ID) != 0) {
-		return;
 		// printf ("[Boom-C%x]: pthread_setaffinity failed.", BOOM_ID);
+		return NULL;
 	} else {
 		ght_set_satp_priv();
 		if_tasks_initalised[BOOM_ID] = 1;
@@ -80,17 +80,19 @@ void gcStartup (void)
 	// Func: 0x00; 0x01; 0x02; 0x03; 0x04; 0x05
 	// Opcode: 0x03
 	// Data path: N/U
+	/*
 	ght_cfg_filter(0x01, 0x00, 0x03, 0x02); // lb
 	ght_cfg_filter(0x01, 0x01, 0x03, 0x02); // lh
 	ght_cfg_filter(0x01, 0x02, 0x03, 0x02); // lw
 	ght_cfg_filter(0x01, 0x03, 0x03, 0x02); // ld
-	// ght_cfg_filter(0x01, 0x04, 0x03, 0x02); // lbu
-	// ght_cfg_filter(0x01, 0x05, 0x03, 0x02); // lhu
+	ght_cfg_filter(0x01, 0x04, 0x03, 0x02); // lbu
+	ght_cfg_filter(0x01, 0x05, 0x03, 0x02); // lhu
+	*/
 
 	// se: 00, end_id: 0x02, scheduling: rr, start_id: 0x01
-  	ght_cfg_se (0x00, 0x02, 0x01, 0x01);
+  	// ght_cfg_se (0x00, 0x02, 0x01, 0x01);
 
-	ght_cfg_mapper (0x01, 0b0001);
+	// ght_cfg_mapper (0x01, 0b0001);
 
 	if (GC_DEBUG == 1){
 		printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
@@ -113,7 +115,7 @@ void gcCleanup (void)
 		pthread_join(threads[i], NULL);
 	}
 
-	ght_unset_satp_priv();
+	ght_unset_satp_priv ();
 	ght_set_status (0x00);
 }
 
