@@ -149,3 +149,8 @@ int gc_pthread_setaffinity(uint64_t phart_id){
 	
 	return s;
 } 
+
+static inline uint64_t ghe_initailised (uint64_t if_initailised)
+{
+  ROCC_INSTRUCTION_S (1, if_initailised, 0x24);
+}

@@ -12,16 +12,9 @@
 #include "libraries/gc_top.h"
 #include "libraries/spin_lock.h"
 
-/* Apply the constructor attribute to myStartupFun() so that it
-     is executed before main() */
- void gcStartup (void) __attribute__ ((constructor));
+void gcStartup (void) __attribute__ ((constructor));
+void gcCleanup (void) __attribute__ ((destructor));
 
-
- /* Apply the destructor attribute to myCleanupFun() so that it
-    is executed after main() */
- void gcCleanup (void) __attribute__ ((destructor));
- 
-int agg_core_id = 0x08;
 pthread_t threads[NUM_CORES-1];
 int if_tasks_initalised[NUM_CORES] = {0};
 
@@ -32,8 +25,7 @@ void* thread_pmc(void* args){
 	uint64_t perfc = 0;
 
 	if (gc_pthread_setaffinity(hart_id) != 0){
-		// printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
-		return NULL;
+		printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
 	} else{
 		if_tasks_initalised[hart_id] = 1;
 	}
@@ -58,8 +50,7 @@ void gcStartup (void)
     //================== Initialisation ==================//
     // Bound current thread to BOOM
     if (gc_pthread_setaffinity(BOOM_ID) != 0) {
-		return;
-		// printf ("[Boom-C%x]: pthread_setaffinity failed.", BOOM_ID);
+		printf ("[Boom-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	} else {
 		ght_set_satp_priv();
 		if_tasks_initalised[BOOM_ID] = 1;
@@ -69,29 +60,7 @@ void gcStartup (void)
     for (uint64_t i = 0; i < NUM_CORES - 1; i++) {
 		pthread_create(&threads[i], NULL, thread_pmc, (void *) (i+1));
 	}
-
-    /*=====================*/
-    /*  GC configurations  */
-    /*=====================*/
-    ghm_cfg_agg(agg_core_id);
-
-	// Insepct load operations 
-	// index: 0x01 
-	// Func: 0x00; 0x01; 0x02; 0x03; 0x04; 0x05
-	// Opcode: 0x03
-	// Data path: N/U
-	ght_cfg_filter(0x01, 0x00, 0x03, 0x02); // lb
-	ght_cfg_filter(0x01, 0x01, 0x03, 0x02); // lh
-	ght_cfg_filter(0x01, 0x02, 0x03, 0x02); // lw
-	ght_cfg_filter(0x01, 0x03, 0x03, 0x02); // ld
-	// ght_cfg_filter(0x01, 0x04, 0x03, 0x02); // lbu
-	// ght_cfg_filter(0x01, 0x05, 0x03, 0x02); // lhu
-
-	// se: 00, end_id: 0x02, scheduling: rr, start_id: 0x01
-  	ght_cfg_se (0x00, 0x02, 0x01, 0x01);
-
-	ght_cfg_mapper (0x01, 0b0001);
-
+	
 	if (GC_DEBUG == 1){
 		printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
 	}

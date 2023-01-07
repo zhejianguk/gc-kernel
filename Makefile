@@ -1,16 +1,23 @@
 CC = riscv64-unknown-linux-gnu-gcc
 
 OFLAGS := -O3 -DRISCV -march=rv64imafd -DUSE_PUBLIC_MALLOC_WRAPPERS
-OFLAGS_gc := -O3 -DRISCV -march=rv64imafd
 CFLAGS:= -O3 -DRISCV -march=rv64imafd
+
+OFLAGS_CM := -O3 -DRISCV -march=rv64imafd
 CFLAGS_CM:= -O3 -DRISCV -march=rv64imafd -Wl,--allow-multiple-definition
 
 
 #CC = gcc
 #CFLAGS := -O3 -std=gnu99
 
+initialisation_pmc: initialisation_pmc.c
+	${CC} ${CFLAGS} -o initialisation_pmc.riscv initialisation_pmc.c -lpthread
+
 gc_main_pmc: gc_main_pmc.c
-	${CC} ${OFLAGS_gc} -c gc_main_pmc.c -lpthread
+	${CC} ${OFLAGS_CM} -c gc_main_pmc.c -lpthread
+
+gc_main_none: gc_main_none.c
+	${CC} ${OFLAGS_CM} -c gc_main_none.c -lpthread
 
 malloc: malloc.c
 	${CC} ${OFLAGS} -c malloc.c
