@@ -27,7 +27,8 @@ void main (void)
     /*  GC configurations  */
     /*=====================*/
     ghm_cfg_agg(AGG_CORE_ID);
-
+	ght_set_num_of_checkers(NUM_CORES-1);
+	
 	// Insepct load operations 
 	// index: 0x01 
 	// Func: 0x00; 0x01; 0x02; 0x03; 0x04; 0x05

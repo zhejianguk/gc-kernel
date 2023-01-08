@@ -16,7 +16,6 @@ void gcStartup (void) __attribute__ ((constructor));
 void gcCleanup (void) __attribute__ ((destructor));
 
 pthread_t threads[NUM_CORES-1];
-int if_tasks_initalised[NUM_CORES] = {0};
 
 void* thread_pmc(void* args){
     uint64_t hart_id = (uint64_t) args;
@@ -27,7 +26,7 @@ void* thread_pmc(void* args){
 	if (gc_pthread_setaffinity(hart_id) != 0){
 		printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
 	} else{
-		if_tasks_initalised[hart_id] = 1;
+		ghe_initailised(1);
 	}
 
 	//===================== Execution =====================// 
@@ -42,6 +41,7 @@ void* thread_pmc(void* args){
 		printf("[Rocket-C%x-PMC]: Completed, PMC = %x! \r\n", hart_id, perfc);
 	}
 
+	ghe_initailised(0);
 	return NULL;
 }
 
@@ -53,7 +53,7 @@ void gcStartup (void)
 		printf ("[Boom-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	} else {
 		ght_set_satp_priv();
-		if_tasks_initalised[BOOM_ID] = 1;
+		// if_tasks_initalised[BOOM_ID] = 1;
 	}
 
     // GC threads
@@ -65,7 +65,7 @@ void gcStartup (void)
 		printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
 	}
 
-	while (and_gate(if_tasks_initalised, NUM_CORES) == 0){
+	while(ght_get_initialisation () != 1){	
 	}
 
 	ght_set_status (0x01); // ght: start
