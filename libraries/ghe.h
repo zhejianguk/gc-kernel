@@ -14,9 +14,9 @@ static inline uint64_t debug_icounter ()
 
 static inline uint64_t debug_gcounter ()
 {
-  uint64_t icounter;
-  ROCC_INSTRUCTION_D (1, icounter, 0x23);
-  return icounter;
+  uint64_t gcounter;
+  ROCC_INSTRUCTION_D (1, gcounter, 0x23);
+  return gcounter;
 }
 
 static inline uint64_t debug_mcounter ()
@@ -154,3 +154,25 @@ static inline uint64_t ghe_initailised (uint64_t if_initailised)
 {
   ROCC_INSTRUCTION_S (1, if_initailised, 0x24);
 }
+
+static inline uint64_t ghe_get_bufferdepth ()
+{
+  uint64_t depth;
+  ROCC_INSTRUCTION_D (1, depth, 0x25);
+  return depth;
+}
+
+static inline uint64_t ghe_get_fifocounter ()
+{
+  uint64_t counter;
+  ROCC_INSTRUCTION_D (1, counter, 0x26);
+  return counter;
+}
+
+static inline uint64_t ghe_get_fifodcounter ()
+{
+  uint64_t dcounter;
+  ROCC_INSTRUCTION_D (1, dcounter, 0x27);
+  return dcounter;
+}
+

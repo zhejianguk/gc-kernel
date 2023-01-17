@@ -25,23 +25,60 @@ void* thread_pmc(void* args){
 
 	if (gc_pthread_setaffinity(hart_id) != 0){
 		printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
-	} else{
-		ghe_initailised(1);
 	}
 
+	ghe_initailised(1);
+
 	//===================== Execution =====================// 
-	while (ghe_checkght_status() != 0x02) {
-		while (ghe_status() != GHE_EMPTY){
+	while (ghe_checkght_status() != 0x02){
+		uint32_t buffer_depth = ghe_get_bufferdepth();
+		while (buffer_depth > 7) {
 			ROCC_INSTRUCTION (1, 0x0D);
-			perfc++;
+			ROCC_INSTRUCTION (1, 0x0D);
+			ROCC_INSTRUCTION (1, 0x0D);
+			ROCC_INSTRUCTION (1, 0x0D);
+			ROCC_INSTRUCTION (1, 0x0D);
+			ROCC_INSTRUCTION (1, 0x0D);
+			ROCC_INSTRUCTION (1, 0x0D);
+			ROCC_INSTRUCTION (1, 0x0D);
+			perfc = perfc + 8;
+			buffer_depth = ghe_get_bufferdepth();
+		}
+
+		if (buffer_depth > 0) {
+		switch (buffer_depth){
+			case 7: 
+				ROCC_INSTRUCTION (1, 0x0D);
+			case 6: 
+				ROCC_INSTRUCTION (1, 0x0D);
+			case 5: 
+				ROCC_INSTRUCTION (1, 0x0D);
+			case 4: 
+				ROCC_INSTRUCTION (1, 0x0D);
+			case 3: 
+				ROCC_INSTRUCTION (1, 0x0D);
+			case 2: 
+				ROCC_INSTRUCTION (1, 0x0D);
+			case 1: 
+				ROCC_INSTRUCTION (1, 0x0D);
+				perfc = perfc + buffer_depth;
+			}
 		}
 	}
+
 	//=================== Post execution ===================//
 	if (GC_DEBUG == 1){
-		printf("[Rocket-C%x-PMC]: Completed, PMC = %x! \r\n", hart_id, perfc);
+		printf("[Rocket-C%x-PMC]: Completed, PMC = %lx! \r\n", hart_id, perfc);
+  	  	uint64_t e_counter = debug_ecounter();
+		uint64_t remaining = ghe_get_bufferdepth();
+		uint64_t f_counter = ghe_get_fifocounter();
+		uint64_t df_counter = ghe_get_fifodcounter();
+  	  	printf("[Rocket-C%x-PMC]: Debug, i-counter: %lx; remaining %x messages. \r\n", hart_id, e_counter, remaining);
+		printf("[Rocket-C%x-PMC]: Debug, f-counter: %lx; df-counter: %lx. \r\n", hart_id, f_counter, df_counter);
 	}
 
 	ghe_initailised(0);
+
 	return NULL;
 }
 
@@ -51,10 +88,9 @@ void gcStartup (void)
     // Bound current thread to BOOM
     if (gc_pthread_setaffinity(BOOM_ID) != 0) {
 		printf ("[Boom-C%x]: pthread_setaffinity failed.", BOOM_ID);
-	} else {
-		ght_set_satp_priv();
-		// if_tasks_initalised[BOOM_ID] = 1;
 	}
+
+	ght_set_satp_priv();
 
     // GC threads
     for (uint64_t i = 0; i < NUM_CORES - 1; i++) {
@@ -62,12 +98,13 @@ void gcStartup (void)
 	}
 	
 	if (GC_DEBUG == 1){
-		printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
+		printf("[Boom-%x]: All Initalised. \r\n", BOOM_ID);
 	}
 
-	while(ght_get_initialisation () != 1){	
-	}
+	while (ght_get_initialisation() == 0){
+ 	}
 
+	printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
 	ght_set_status (0x01); // ght: start
     //===================== Execution =====================//
 }
@@ -80,6 +117,19 @@ void gcCleanup (void)
     // GC threads.
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
+	}
+	
+	if (GC_DEBUG == 1){
+		printf("[Boom-%x]: Test is now completed: \r\n", BOOM_ID);
+		
+		// Below code is used to check the message counters -- ensuring no missing message
+		uint64_t m_counter = debug_mcounter();
+  	  	uint64_t i_counter = debug_icounter();
+  	  	uint64_t g_counter = debug_gcounter();
+
+  	  	printf("Debug, m-counter: %lx \r\n", m_counter);
+  		printf("Debug, i-counter: %lx \r\n", i_counter);
+  		printf("Debug, g-counter: %lx \r\n", g_counter);
 	}
 
 	ght_unset_satp_priv();
