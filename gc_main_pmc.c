@@ -15,7 +15,6 @@
 void gcStartup (void) __attribute__ ((constructor));
 void gcCleanup (void) __attribute__ ((destructor));
 
-int GC_DEBUG = 1;
 pthread_t threads[NUM_CORES-1];
 
 void* thread_pmc_gc(void* args){
@@ -23,7 +22,7 @@ void* thread_pmc_gc(void* args){
     //================== Initialisation ==================//
 	// GC variables
 	uint64_t base = 0;
-	uint64_t end = 0x1000000000L;
+	uint64_t end = 0x10000000000L;
 	uint64_t perfc = 0;
 	uint64_t addr;
 	uint64_t addr1;
@@ -91,11 +90,14 @@ void* thread_pmc_gc(void* args){
 				case 1: 
 					ROCC_INSTRUCTION_D (1, addr, 0x0D);
 					perfc += (addr > base && addr < end) ? 1 : 0;
+					break;
+				default:
+					printf("[Rocket-C%x-PMC]: error: debuffs'device! \r\n" , hart_id);
 			}
 		}
 	}
 	//=================== Post execution ===================//
-	if (GC_DEBUG == 1){
+	if (hart_id != 0){ // Invalid condition, making sure the perfc is not optimised.
 		printf("[Rocket-C%x-PMC]: Completed, PMC = %lx! \r\n", hart_id, perfc);
 	}
 
@@ -116,10 +118,6 @@ void gcStartup (void)
     for (uint64_t i = 0; i < NUM_CORES - 1; i++) {
 		pthread_create(&threads[i], NULL, thread_pmc_gc, (void *) (i+1));
 	}
-	
-	if (GC_DEBUG == 1){
-		printf("[Boom-%x]: All Initalised. \r\n", BOOM_ID);
-	}
 
 	while (ght_get_initialisation() == 0){
  	}
@@ -127,13 +125,14 @@ void gcStartup (void)
 	ght_set_satp_priv();
 	printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
 
-	int s;
+	/* int s;
  	struct sched_param fifo_param;
   	fifo_param.sched_priority=1;
  	s = pthread_setschedparam(pthread_self(), SCHED_FIFO, &fifo_param);
    	if (s != 0) {
 		printf("Error: Scheduling policy! %x. \r\n", s);
    	}
+	*/
 
 	ght_set_status (0x01); // ght: start
     //===================== Execution =====================//
@@ -150,15 +149,6 @@ void gcCleanup (void)
 	
 	if (GC_DEBUG == 1){
 		printf("[Boom-%x]: Test is now completed: \r\n", BOOM_ID);
-		
-		// Below code is used to check the message counters -- ensuring no missing message
-		uint64_t m_counter = debug_mcounter();
-  	  	uint64_t i_counter = debug_icounter();
-  	  	uint64_t g_counter = debug_gcounter();
-
-  	  	printf("Debug, m-counter: %lx \r\n", m_counter);
-  		printf("Debug, i-counter: %lx \r\n", i_counter);
-  		printf("Debug, g-counter: %lx \r\n", g_counter);
 	}
 
 	ght_unset_satp_priv();
