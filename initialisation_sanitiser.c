@@ -20,7 +20,7 @@ void main (void)
     if (gc_pthread_setaffinity(BOOM_ID) != 0) {
 		printf ("[Boom-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	}
-	
+
     /*=====================*/
     /*  GC configurations  */
     /*=====================*/
@@ -28,23 +28,33 @@ void main (void)
 	ght_set_num_of_checkers(NUM_CORES-1);
 	
 	// Insepct load operations 
-	// index: 0x01 
+	// index: 0x02
 	// Func: 0x00; 0x01; 0x02; 0x03; 0x04; 0x05
 	// Opcode: 0x03
-	// Data path: N/U
-	ght_cfg_filter(0x01, 0x00, 0x03, 0x02); // lb
-	ght_cfg_filter(0x01, 0x01, 0x03, 0x02); // lh
-	ght_cfg_filter(0x01, 0x02, 0x03, 0x02); // lw
-	ght_cfg_filter(0x01, 0x03, 0x03, 0x02); // ld
-	ght_cfg_filter(0x01, 0x04, 0x03, 0x02); // lbu
-	ght_cfg_filter(0x01, 0x05, 0x03, 0x02); // lhu
+	// Data path: Load Queue
+	ght_cfg_filter(0x02, 0x00, 0x03, 0x02); // lb
+	ght_cfg_filter(0x02, 0x01, 0x03, 0x02); // lh
+	ght_cfg_filter(0x02, 0x02, 0x03, 0x02); // lw
+	ght_cfg_filter(0x02, 0x03, 0x03, 0x02); // ld
+	ght_cfg_filter(0x02, 0x04, 0x03, 0x02); // lbu
+	ght_cfg_filter(0x02, 0x05, 0x03, 0x02); // lhu
+
+	// Insepct store operations 
+	// index: 0x02 
+	// Func: 0x00; 0x01; 0x02; 0x03
+	// Opcode: 0x23
+	// Data path: Store Queue
+	ght_cfg_filter(0x02, 0x00, 0x23, 0x03); // sb
+	ght_cfg_filter(0x02, 0x01, 0x23, 0x03); // sh
+	ght_cfg_filter(0x02, 0x02, 0x23, 0x03); // sw
+	ght_cfg_filter(0x02, 0x03, 0x23, 0x03); // sd
 
 	// se: 00, end_id: NUM_CORES-1, scheduling: rr, start_id: 0x01
-  	ght_cfg_se (0x00, NUM_CORES-1, 0x01, 0x01);
+  	ght_cfg_se (0x01, NUM_CORES-1, 0x01, 0x01);
 
-	ght_cfg_mapper (0x01, 0b0001);
+	ght_cfg_mapper (0x02, 0b0010);
 
-	printf("[Boom-%x]: Initialisation for PMC is now completed, number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
+	printf("[Boom-%x]: Initialisation for Sanitiser is now completed, number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
 
 }
 

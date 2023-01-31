@@ -1473,6 +1473,7 @@ static pthread_mutex_t mALLOC_MUTEx = PTHREAD_MUTEX_INITIALIZER;
 #ifdef GUARDIANCOUNCIL
 #include "libraries/rocc.h"
 #include "libraries/ght.h"
+#include "libraries/gc_top.h"
 #include "libraries/spin_lock.h"
 
 extern char* shadow;
@@ -1483,12 +1484,33 @@ int debug = 0;
 
 void poison(void* start, size_t bytes) {
 
-  if (and_gate(if_tasks_initalised, NUM_CORES) == 1){
+  if (ght_get_initialisation() == 1) {
     ght_set_status (0x04); // ght: pause
     while (ght_get_status() < 0xFFFF) {
       //drain_checkers();
     }
 
+    char* start_s = &shadow[((long)start)>>7];
+    char* end_s = &shadow[((long)(start+bytes))>>7];
+
+    int misalign_end = ((long)end_s) & 8;
+
+    if(misalign_end){
+      *end_s |= ((255<<misalign_end)>>8);
+      bytes-=misalign_end;
+    }
+
+    int misalign = ((long)start_s)&8;
+    if(misalign){
+      *start_s |= ((255<<8)>>misalign);
+      start_s++;
+      bytes-=misalign;
+    }
+
+    for(;start_s<end_s;start_s++) {
+      *start_s=-1;
+    }
+    /*
     asm volatile("fence rw, rw;");
     long start_index = (long)start >> 7;
     long end_index = (long)(start+bytes) >> 7;
@@ -1540,21 +1562,42 @@ void poison(void* start, size_t bytes) {
     }
     
     asm volatile("fence rw, rw;");
-
+    */
+    asm volatile("fence rw, rw;");
     ght_set_status (0x01);
   }
 }
 
 
 void unpoison(void* start, size_t bytes) {
-  
-  if (and_gate(if_tasks_initalised, NUM_CORES) == 1){
+  if (ght_get_initialisation() == 1) {
     ght_set_status (0x04); // ght: pause
     while (ght_get_status() < 0xFFFF){
       //drain_checkers();
     }
 
-  
+    char* start_s = &shadow[((long)start)>>7];
+	  char* end_s = &shadow[((long)(start+bytes))>>7];
+
+    int misalign_end = ((long)end_s) & 8;
+
+    if(misalign_end){
+      *end_s &= ~((255<<misalign_end)>>8);
+      bytes-=misalign_end;
+    }
+    
+    int misalign = ((long)start_s)&8;
+    if(misalign){
+		  *start_s &= ~((255<<8)>>misalign);
+		  start_s++;
+		  bytes-=misalign;
+    }
+    
+    for(;start_s<end_s;start_s++) {
+      *start_s=0;
+	  }
+
+    /*
     asm volatile("fence rw, rw;");
     long start_index = (long)start >> 7;
     long end_index = (long)(start+bytes) >> 7;
@@ -1606,8 +1649,10 @@ void unpoison(void* start, size_t bytes) {
         lock_release(&uart_lock);
       }
     }
+    asm volatile("fence rw, rw;"); 
+    */
     asm volatile("fence rw, rw;");
-
+    
     ght_set_status (0x01);
   }
 }
@@ -1643,14 +1688,14 @@ Void_t* public_mALLOc(size_t bytes) {
   if (MALLOC_PREACTION != 0) {
     return 0;
   }
-  m = mALLOc(bytes+15);
+  m = mALLOc(bytes+16);
   if (MALLOC_POSTACTION != 0) {
   }
   // lock_acquire(&uart_lock);
   // printf("Set address from: %x - %x \r\n", m, m+bytes+32);
   // lock_release(&uart_lock);
   unpoison(m,bytes);
-  poison(m+bytes,15);
+  poison(m+bytes,16);
   return m;
 }
 
@@ -1670,7 +1715,9 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
   if (MALLOC_PREACTION != 0) {
     return 0;
   }
-  m = rEALLOc(m, bytes+15);
+  m = rEALLOc(m, bytes+16);
+  unpoison(m,bytes);
+  poison(m+bytes,16);
   if (MALLOC_POSTACTION != 0) {
   }
   return m;
@@ -1715,6 +1762,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     return 0;
   }
   m = cALLOc(n, elem_size);
+  unpoison(m,n*elem_size);
   if (MALLOC_POSTACTION != 0) {
   }
   return m;

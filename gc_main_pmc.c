@@ -97,7 +97,7 @@ void* thread_pmc_gc(void* args){
 		}
 	}
 	//=================== Post execution ===================//
-	if (hart_id != 0){ // Invalid condition, making sure the perfc is not optimised.
+	if (hart_id == 0){ // Invalid condition, making sure the perfc is not optimised.
 		printf("[Rocket-C%x-PMC]: Completed, PMC = %lx! \r\n", hart_id, perfc);
 	}
 

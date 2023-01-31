@@ -87,28 +87,19 @@ static inline uint64_t ghe_checkght_status ()
 }
 
 
-static inline uint64_t ghe_complete ()
+static inline void ghe_complete ()
 {
-  uint64_t get_status = 0;
-  uint64_t set_status = 0x01;
-  ROCC_INSTRUCTION_DS (1, get_status, set_status, 0x01);
-  return get_status; 
+  ROCC_INSTRUCTION_S (1, 0x01, 0x01);
 }
 
-static inline uint64_t ghe_release ()
+static inline void ghe_release ()
 {
-  uint64_t get_status = 0;
-  uint64_t set_status = 0xFF;
-  ROCC_INSTRUCTION_DS (1, get_status, set_status, 0x01);
-  return get_status; 
+  ROCC_INSTRUCTION_S (1, 0xFF, 0x01);
 }
 
-static inline uint64_t ghe_go ()
+static inline void ghe_go ()
 {
-  uint64_t get_status = 0;
-  uint64_t set_status = 0;
-  ROCC_INSTRUCTION_DS (1, get_status, set_status, 0x01);
-  return get_status; 
+  ROCC_INSTRUCTION_S (1, 0x00, 0x01);
 }
 
 static inline uint64_t ghe_agg_status ()

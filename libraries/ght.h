@@ -26,9 +26,7 @@ static inline uint64_t debug_ecounter ()
 
 static inline void ght_set_status (uint64_t status)
 {
-  asm volatile("fence rw, rw;");
   ROCC_INSTRUCTION_SS (1, status, 0X01, 0x06);
-  asm volatile("fence rw, rw;");
 }
 
 static inline uint64_t ght_get_status ()

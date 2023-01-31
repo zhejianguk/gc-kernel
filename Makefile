@@ -3,7 +3,6 @@ CC = riscv64-unknown-linux-gnu-gcc
 OFLAGS := -O3 -DRISCV -march=rv64imafd -DUSE_PUBLIC_MALLOC_WRAPPERS
 CFLAGS:= -O3 -DRISCV -march=rv64imafd
 
-OFLAGS_CM := -O3 -DRISCV -march=rv64imafd
 CFLAGS_CM:= -O3 -DRISCV -march=rv64imafd -Wl,--allow-multiple-definition
 
 
@@ -13,15 +12,24 @@ CFLAGS_CM:= -O3 -DRISCV -march=rv64imafd -Wl,--allow-multiple-definition
 initialisation_pmc: initialisation_pmc.c
 	${CC} ${CFLAGS} -o initialisation_pmc.riscv initialisation_pmc.c -lpthread
 
+initialisation_sanitiser: initialisation_sanitiser.c
+	${CC} ${CFLAGS} -o initialisation_sanitiser.riscv initialisation_sanitiser.c -lpthread
+
 gc_main_pmc: gc_main_pmc.c
-	${CC} ${OFLAGS_CM} -c gc_main_pmc.c -lpthread
+	${CC} ${CFLAGS} -c gc_main_pmc.c -lpthread
 
 gc_main_none: gc_main_none.c
-	${CC} ${OFLAGS_CM} -c gc_main_none.c -lpthread
+	${CC} ${CFLAGS} -c gc_main_none.c -lpthread
+
+gc_main_sanitiser: gc_main_sanitiser.c
+	${CC} ${CFLAGS_CM} -c gc_main_sanitiser.c -lpthread
 
 malloc: malloc.c
 	${CC} ${OFLAGS} -c malloc.c
-	
+
+################################################
+# Some test casese
+################################################
 tc_pmc: tc_pmc.c
 	${CC} ${CFLAGS} -o tc_pmc.riscv tc_pmc.c -lpthread
 
