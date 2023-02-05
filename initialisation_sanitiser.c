@@ -10,7 +10,6 @@
 #include "libraries/ght.h"
 #include "libraries/ghe.h"
 #include "libraries/gc_top.h"
-#include "libraries/spin_lock.h"
 
   
 void main (void)

@@ -5,6 +5,7 @@
 #define GHE_EMPTY 0x01
 
 
+/*
 static inline uint64_t debug_icounter ()
 {
   uint64_t icounter;
@@ -25,8 +26,7 @@ static inline uint64_t debug_mcounter ()
   ROCC_INSTRUCTION_D (1, mcounter, 0x19);
   return mcounter;
 }
-
-
+*/
 
 static inline uint64_t ghe_status ()
 {
@@ -37,45 +37,6 @@ static inline uint64_t ghe_status ()
   // 0b10: full;
   // 0b00: data buffered;
   // 0b11: error
-}
-
-
-static inline uint64_t ghe_top_func_opcode ()
-{
-  uint64_t packet = 0x00;
-  if (ghe_status() != 0x01) {
-    ROCC_INSTRUCTION_D (1, packet, 0x0A);
-  }
-  return packet;
-}
-
-static inline uint64_t ghe_pop_func_opcode ()
-{
-  uint64_t packet = 0x00;
-  if (ghe_status() != 0x01) {
-    ROCC_INSTRUCTION_D (1, packet, 0x0B);
-  }
-  return packet;
-}
-
-
-static inline uint64_t ghe_top_data ()
-{
-  uint64_t packet = 0x00;
-  if (ghe_status() != 0x01) {
-    ROCC_INSTRUCTION_D (1, packet, 0x0C);
-  }
-  return packet;
-}
-
-
-static inline uint64_t ghe_pop_data ()
-{
-  uint64_t packet = 0x00;
-  if (ghe_status() != 0x01) {
-    ROCC_INSTRUCTION_D (1, packet, 0x0D);
-  }
-  return packet;
 }
 
 
@@ -153,6 +114,7 @@ static inline uint64_t ghe_get_bufferdepth ()
   return depth;
 }
 
+/*
 static inline uint64_t ghe_get_fifocounter ()
 {
   uint64_t counter;
@@ -166,4 +128,18 @@ static inline uint64_t ghe_get_fifodcounter ()
   ROCC_INSTRUCTION_D (1, dcounter, 0x27);
   return dcounter;
 }
+*/
 
+static inline uint64_t ghe_get_fifocache0 ()
+{
+  uint64_t fifocache;
+  ROCC_INSTRUCTION_D (1, fifocache, 0x28);
+  return fifocache;
+}
+
+static inline uint64_t ghe_get_fifocache1 ()
+{
+  uint64_t fifocache;
+  ROCC_INSTRUCTION_D (1, fifocache, 0x29);
+  return fifocache;
+}

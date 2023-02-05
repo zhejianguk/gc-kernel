@@ -10,7 +10,6 @@
 #include "libraries/ght.h"
 #include "libraries/ghe.h"
 #include "libraries/gc_top.h"
-#include "libraries/spin_lock.h"
 #include "malloc.h"
 #include "sys/mman.h"
 
@@ -20,48 +19,184 @@ void gcCleanup (void) __attribute__ ((destructor));
 
 pthread_t threads[NUM_CORES-1];
 char* shadow;
+uint64_t map_size = (long long) 4*1024*1024*1024*sizeof(char);
+
+void report_error(uint64_t offset){
+	int PC;
+	if (offset==0) {
+		PC = ghe_get_fifocache0();
+	} else {
+		PC = ghe_get_fifocache1();
+	}
+
+	printf("**Error** accesses at PC: %x.\r\n", PC);
+}
+
 
 void* thread_sanitiser_gc(void* args){
     uint64_t hart_id = (uint64_t) args;
-    //================== Initialisation ==================//
 	// GC variables
-	uint64_t Address = 0x0;
-  	uint64_t Err_Cnt = 0x0;
-	uint64_t Header = 0x0;
-	uint64_t PC = 0x0;
-	uint64_t Inst = 0x0;
+	char bits = 0;
+	char bits1 = 0;
+	char bits2 = 0;
 
+	uint64_t Address = 0x0;
+	uint64_t Header = 0x0;
+	uint64_t Address1 = 0x0;
+	uint64_t Header1 = 0x0;
+	uint64_t Address2 = 0x0;
+	uint64_t Header2 = 0x0;
+
+	//================== Initialisation ==================//
 	if (gc_pthread_setaffinity(hart_id) != 0){
 		printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
-	} else {
-		ghe_go();
-		ghe_initailised(1);
 	}
+	
+	ghe_go();
+	ghe_initailised(1);
 
-	//===================== Execution =====================// 
+	//===================== Execution =====================//
 	while (ghe_checkght_status() != 0x02){
-		while (ghe_status() != GHE_EMPTY){
-			// ROCC_INSTRUCTION_D (1, Header, 0x0A);
-			// ROCC_INSTRUCTION_D (1, Address, 0x0D);
-			ROCC_INSTRUCTION_D (1, Address, 0x0C);
-			ROCC_INSTRUCTION_D (1, Header, 0x0B);
-
-			char bits = shadow[(Address)>>7];
-
-			if (bits != 0){
-				if(bits & (1<<((Address >> 7)&8))) {
-					printf("[Rocket-C%x-Sani]: **Error** illegal accesses at %lx, PC: %x. \r\n", hart_id, Address, Header);
+		// Run analysis
+		uint32_t buffer_depth = ghe_get_bufferdepth();
+		while (buffer_depth > 7){
+			ROCC_INSTRUCTION_D (1, Address1, 0x0D);
+			ROCC_INSTRUCTION_D (1, Address2, 0x0D);
+			bits1 = shadow[(Address1)>>7];
+			if (bits1 != 0){
+				if(bits1 & (1<<((Address1 >> 7)&8))) {
+					report_error(1);
 				}
-			} else {
-				// no nothing
+			}
+			bits2 = shadow[(Address2)>>7];
+			if (bits2 != 0){
+				if(bits2 & (1<<((Address2 >> 7)&8))) {
+					report_error(0);
+				}
+			}
+
+			ROCC_INSTRUCTION_D (1, Address1, 0x0D);
+			ROCC_INSTRUCTION_D (1, Address2, 0x0D);
+			bits1 = shadow[(Address1)>>7];
+			if (bits1 != 0){
+				if(bits1 & (1<<((Address1 >> 7)&8))) {
+					report_error(1);
+				}
+			}
+			bits2 = shadow[(Address2)>>7];
+			if (bits2 != 0){
+				if(bits2 & (1<<((Address2 >> 7)&8))) {
+					report_error(0);
+				}
+			}
+
+			ROCC_INSTRUCTION_D (1, Address1, 0x0D);
+			ROCC_INSTRUCTION_D (1, Address2, 0x0D);
+			bits1 = shadow[(Address1)>>7];
+			if (bits1 != 0){
+				if(bits1 & (1<<((Address1 >> 7)&8))) {
+					report_error(1);
+				}
+			}
+			bits2 = shadow[(Address2)>>7];
+			if (bits2 != 0){
+				if(bits2 & (1<<((Address2 >> 7)&8))) {
+					report_error(0);
+				}
+			}
+			
+			ROCC_INSTRUCTION_D (1, Address1, 0x0D);
+			ROCC_INSTRUCTION_D (1, Address2, 0x0D);
+			bits1 = shadow[(Address1)>>7];
+			if (bits1 != 0){
+				if(bits1 & (1<<((Address1 >> 7)&8))) {
+					report_error(1);
+				}
+			}
+			bits2 = shadow[(Address2)>>7];
+			if (bits2 != 0){
+				if(bits2 & (1<<((Address2 >> 7)&8))) {
+					report_error(0);
+				}
+			}
+			buffer_depth = ghe_get_bufferdepth();
+		}
+
+		if (buffer_depth > 0){
+			switch (buffer_depth){
+				case 7:
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
+				case 6: 
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
+				case 5: 
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
+				case 4: 
+					ROCC_INSTRUCTION_D (1, Address, 0x0D);
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
+				case 3: 
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
+				case 2: 
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
+				case 1: 
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+					break;
+
+				default:
+					exit(0);
 			}
 		}
 
 		// Dedicated for shadowstack 
 		if (ghe_checkght_status() == 0x04) {
 			ghe_complete();
-			while((ghe_checkght_status() == 0x04)) {
-				// Wait big core to re-start
+			while(ghe_checkght_status() == 0x04) {
 			}
 			ghe_go();
 		}
@@ -71,10 +206,6 @@ void* thread_sanitiser_gc(void* args){
 	ghe_initailised(0);
 	ghe_release();
 
-	if (hart_id != 0){ // Invalid condition, making sure the Err_Cnt is not optimised.
-		printf("Rocket-C%x-Sani]: Completed, %d illegal accesses are detected. \r\n", hart_id);
-	}
-
 	return NULL; 
 }
 
@@ -83,23 +214,21 @@ void gcStartup (void)
     //================== Initialisation ==================//
     // Bound current thread to BOOM
     if (gc_pthread_setaffinity(BOOM_ID) != 0) {
-		printf ("[Boom-C%x]: pthread_setaffinity failed.", BOOM_ID);
+		printf ("[BOOM-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	}
 
-	uint64_t map_size = (long long) 4*1024*1024*1024*sizeof(char);
+	
 	// shadow memory
 	shadow = mmap(NULL,
-			map_size,
-			PROT_WRITE | PROT_READ,
-			MAP_PRIVATE | MAP_ANON | MAP_NORESERVE,
-			-1, 0);
+				  map_size,
+				  PROT_WRITE | PROT_READ,
+				  MAP_PRIVATE | MAP_ANON | MAP_NORESERVE,
+				  -1, 0);
 
 	if(shadow == NULL) {
-		printf("[Boom-C%x]: Error! memory is not allocated.", BOOM_ID);
-		exit(0);
+		printf("[BOOM-C%x]: Error! memory is not allocated.", BOOM_ID);
 	}
-	
-	// asm volatile("fence rw, rw;");
+	asm volatile("fence rw, rw;");
 
 	// GC threads
     for (uint64_t i = 0; i < NUM_CORES - 1; i++) {
@@ -108,10 +237,11 @@ void gcStartup (void)
 
 	while (ght_get_initialisation() == 0){
  	}
-	
-	ght_set_satp_priv();
 
-	printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
+	asm volatile("fence rw, rw;");
+
+	printf("[Boom-C%x]: Test is now started: \r\n", BOOM_ID);
+	ght_set_satp_priv();
 	ght_set_status (0x01); // ght: start
     //===================== Execution =====================//
 }
@@ -119,22 +249,19 @@ void gcStartup (void)
 void gcCleanup (void)
 {	
 	//=================== Post execution ===================//
-	uint64_t status;
     ght_set_status (0x02);
-
-	while (((status = ght_get_status()) < 0x1FFFF) || (ght_get_buffer_status() != GHT_EMPTY)){
-	}
 
     // GC threads.
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
 	}
 	
+	munmap(shadow, map_size);
+
 	if (GC_DEBUG == 1){
-		printf("[Boom-%x]: Test is now completed: \r\n", BOOM_ID);
+		printf("[BOOM-C%x]: Test is now completed! \r\n", BOOM_ID);
 	}
 
 	ght_unset_satp_priv();
 	ght_set_status (0x00);
 }
-

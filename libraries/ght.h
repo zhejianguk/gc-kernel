@@ -9,6 +9,7 @@
 #define GHT_FULL 0x02
 #define GHT_EMPTY 0x01
 
+/*
 static inline uint64_t remapping_hart_id (uint64_t hart_id)
 {
   uint64_t process_id = hart_id;
@@ -23,6 +24,7 @@ static inline uint64_t debug_ecounter ()
   ROCC_INSTRUCTION_D (1, ecounter, 0x22);
   return ecounter;
 }
+*/
 
 static inline void ght_set_status (uint64_t status)
 {
@@ -60,12 +62,14 @@ static inline void ght_set_satp_priv ()
    ROCC_INSTRUCTION_S (1, 0x02, 0x16);
  }
 
+/*
 static inline uint64_t ght_get_buffer_status ()
 {
   uint64_t get_buffer_status;
   ROCC_INSTRUCTION_DSS (1, get_buffer_status, 0X00, 0X00, 0x08);
   return get_buffer_status;
 }
+*/
 
 static inline void ght_cfg_filter (uint64_t index, uint64_t func, uint64_t opcode, uint64_t sel_d)
 {
@@ -103,11 +107,7 @@ static inline void ghm_cfg_agg (uint64_t agg_core_id)
   ROCC_INSTRUCTION_SS (1, agg_core_set, 0X02, 0x06);
 }
 
-void idle()
-{
-  while(1){};
-}
-
+/*
 uint64_t task_synthetic_malloc (uint64_t base)
 {
   uint64_t *ptr = NULL;
@@ -138,11 +138,13 @@ uint64_t task_synthetic_malloc (uint64_t base)
 
   return sum;
 }
+*/
 
 static inline uint64_t ght_set_num_of_checkers (uint64_t num)
 {
   ROCC_INSTRUCTION_S (1, num, 0x1c);
 }
+
 
 static inline uint64_t ght_get_initialisation ()
 {

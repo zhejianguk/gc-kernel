@@ -1563,7 +1563,7 @@ void poison(void* start, size_t bytes) {
     
     asm volatile("fence rw, rw;");
     */
-    asm volatile("fence rw, rw;");
+    // asm volatile("fence rw, rw;");
     ght_set_status (0x01);
   }
 }
@@ -1651,7 +1651,7 @@ void unpoison(void* start, size_t bytes) {
     }
     asm volatile("fence rw, rw;"); 
     */
-    asm volatile("fence rw, rw;");
+    // asm volatile("fence rw, rw;");
     
     ght_set_status (0x01);
   }
@@ -1762,7 +1762,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
     return 0;
   }
   m = cALLOc(n, elem_size);
-  unpoison(m,n*elem_size);
+  // unpoison(m,n*elem_size);
   if (MALLOC_POSTACTION != 0) {
   }
   return m;
