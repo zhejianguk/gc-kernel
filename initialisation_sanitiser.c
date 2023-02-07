@@ -26,6 +26,7 @@ void main (void)
     ghm_cfg_agg(AGG_CORE_ID);
 	ght_set_num_of_checkers(NUM_CORES-1);
 	
+	/*
 	// Insepct load operations 
 	// index: 0x02
 	// Func: 0x00; 0x01; 0x02; 0x03; 0x04; 0x05
@@ -52,6 +53,7 @@ void main (void)
   	ght_cfg_se (0x01, NUM_CORES-1, 0x01, 0x01);
 
 	ght_cfg_mapper (0x02, 0b0010);
+	*/
 
 	printf("[Boom-%x]: Initialisation for Sanitiser is now completed, number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
 

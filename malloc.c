@@ -1475,6 +1475,7 @@ static pthread_mutex_t mALLOC_MUTEx = PTHREAD_MUTEX_INITIALIZER;
 #include "libraries/ght.h"
 #include "libraries/gc_top.h"
 #include "libraries/spin_lock.h"
+#include <string.h>
 
 extern char* shadow;
 extern int uart_lock;
@@ -1486,9 +1487,14 @@ void poison(void* start, size_t bytes) {
 
   if (ght_get_initialisation() == 1) {
     ght_set_status (0x04); // ght: pause
+    // char* str1 = "A";
+    // write(STDOUT_FILENO, str1, strlen(str1));
+
     while (ght_get_status() < 0xFFFF) {
       //drain_checkers();
+      ght_set_status (0x04); // ght: pause
     }
+    ght_set_status(0x00); // ght: run, but no filtering
 
     char* start_s = &shadow[((long)start)>>7];
     char* end_s = &shadow[((long)(start+bytes))>>7];
@@ -1510,60 +1516,11 @@ void poison(void* start, size_t bytes) {
     for(;start_s<end_s;start_s++) {
       *start_s=-1;
     }
-    /*
-    asm volatile("fence rw, rw;");
-    long start_index = (long)start >> 7;
-    long end_index = (long)(start+bytes) >> 7;
-
-    long start_bit = ((long)start & 0x70) >> 4;
-    long end_bit = ((long)(start+bytes) & 0x70) >> 4;
-    char MASK = 0xFF;
-
-    if (debug == 1){
-      lock_acquire(&uart_lock);
-      printf ("poisoned address is: %x - %x\r\n", start, start+bytes);
-      printf ("poisoned index is:   %x - %x\r\n", start_index, end_index);
-      printf ("poisoned bit is:     %x - %x\r\n", start_bit, end_bit);
-      lock_release(&uart_lock);
+   
+    while (ght_get_status() != 0) {
+      ght_set_status(0x00);
     }
 
-    if (end_index != start_index){
-      // Start index:
-      shadow[start_index] = shadow[start_index] | (MASK<<start_bit);
-      if (debug == 1){
-        lock_acquire(&uart_lock);
-        printf ("poisoned idx and val:  %x - %x\r\n", start_index, shadow[start_index]);
-        lock_release(&uart_lock);
-      }
-
-      // Middle index:
-      for (long p = start_index+1; p < end_index; p++) {
-        shadow[p] = 0xFF;
-        if (debug == 1){
-          lock_acquire(&uart_lock);
-          printf ("poisoned idx and val:  %x - %x\r\n", p, shadow[p]);
-          lock_release(&uart_lock);
-        }
-      }
-
-      // End index: 
-      shadow[end_index] = shadow[end_index] | ~(MASK<<(end_bit+1));
-      if (debug == 1){
-        lock_acquire(&uart_lock);
-        printf ("poisoned idx and val:  %x - %x\r\n", end_index, shadow[end_index]);
-        lock_release(&uart_lock);
-      }
-    } else {
-      // start_index == end_index
-      shadow[start_index] = shadow[start_index] | (~((MASK<<(end_bit+1)) | (MASK>>(8-start_bit))));
-      if (debug == 1){
-        printf ("poisoned idx and val:  %x - %x\r\n", start_index, shadow[start_index], (~((MASK<<(end_bit+1)) | (MASK>>(8-start_bit)))));
-      }
-    }
-    
-    asm volatile("fence rw, rw;");
-    */
-    // asm volatile("fence rw, rw;");
     ght_set_status (0x01);
   }
 }
@@ -1572,9 +1529,14 @@ void poison(void* start, size_t bytes) {
 void unpoison(void* start, size_t bytes) {
   if (ght_get_initialisation() == 1) {
     ght_set_status (0x04); // ght: pause
-    while (ght_get_status() < 0xFFFF){
-      //drain_checkers();
+
+    // char* str3 = "B";
+    // write(STDOUT_FILENO, str3, strlen(str3));
+    
+    while (ght_get_status() < 0xFFFF) {
+      ght_set_status (0x04); // ght: pause
     }
+    ght_set_status(0x00); // ght: run, but no filtering
 
     char* start_s = &shadow[((long)start)>>7];
 	  char* end_s = &shadow[((long)(start+bytes))>>7];
@@ -1597,61 +1559,9 @@ void unpoison(void* start, size_t bytes) {
       *start_s=0;
 	  }
 
-    /*
-    asm volatile("fence rw, rw;");
-    long start_index = (long)start >> 7;
-    long end_index = (long)(start+bytes) >> 7;
-
-    long start_bit = ((long)start & 0x70) >> 4;
-    long end_bit = ((long)(start+bytes) & 0x70) >> 4;
-    char MASK = 0xFF;
-
-    if (debug == 1){
-      lock_acquire(&uart_lock);
-      printf ("unpoisoned address is: %x - %x\r\n", start, start+bytes);
-      printf ("unpoisoned index is:   %x - %x\r\n", start_index, end_index);
-      printf ("unpoisoned bit is:     %x - %x\r\n", start_bit, end_bit);
-      lock_release(&uart_lock);
+    while (ght_get_status() != 0) {
+      ght_set_status(0x00);
     }
-
-    if (end_index != start_index){
-      // Start index:
-      shadow[start_index] = shadow[start_index] & (~(MASK<<start_bit));
-      if (debug == 1){
-        lock_acquire(&uart_lock);
-        printf ("unpoisoned idx and val:%x - %x\r\n", start_index, shadow[start_index]);
-        lock_release(&uart_lock);
-      }
-
-      // Middle index:
-      for (long p = start_index+1; p < end_index; p++) {
-        shadow[p] = 0;
-        if (debug == 1){
-          lock_acquire(&uart_lock);
-          printf ("unpoisoned idx and val:%x - %x\r\n", p, shadow[p]);
-          lock_release(&uart_lock);
-        }
-      }
-
-      // End index: 
-      shadow[end_index] = shadow[end_index] & (MASK<<(end_bit+1));
-      if (debug == 1){
-        lock_acquire(&uart_lock);
-        printf ("unpoisoned idx and val:%x - %x\r\n", end_index, shadow[end_index]);
-        lock_release(&uart_lock);
-      }
-    } else {
-      // start_index == end_index
-      shadow[start_index] = shadow[start_index] & (~((MASK<<(end_bit+1)) | (MASK>>(8-start_bit))));
-      if (debug == 1){
-        lock_acquire(&uart_lock);
-        printf ("unpoisoned idx and val:%x - %x\r\n", start_index, shadow[start_index]);
-        lock_release(&uart_lock);
-      }
-    }
-    asm volatile("fence rw, rw;"); 
-    */
-    // asm volatile("fence rw, rw;");
     
     ght_set_status (0x01);
   }

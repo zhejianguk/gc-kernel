@@ -49,7 +49,7 @@ void* thread_sanitiser_gc(void* args){
 
 	//================== Initialisation ==================//
 	if (gc_pthread_setaffinity(hart_id) != 0){
-		printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
+		printf ("[Rocket-C%x-Sani]: pthread_setaffinity failed.", hart_id);
 	}
 	
 	ghe_go();
@@ -89,7 +89,7 @@ void* thread_sanitiser_gc(void* args){
 					report_error(0);
 				}
 			}
-
+			
 			ROCC_INSTRUCTION_D (1, Address1, 0x0D);
 			ROCC_INSTRUCTION_D (1, Address2, 0x0D);
 			bits1 = shadow[(Address1)>>7];
@@ -189,6 +189,7 @@ void* thread_sanitiser_gc(void* args){
 					break;
 
 				default:
+					printf("Error: duff's device");
 					exit(0);
 			}
 		}
@@ -197,6 +198,7 @@ void* thread_sanitiser_gc(void* args){
 		if (ghe_checkght_status() == 0x04) {
 			ghe_complete();
 			while(ghe_checkght_status() == 0x04) {
+				ghe_complete();
 			}
 			ghe_go();
 		}
@@ -217,7 +219,6 @@ void gcStartup (void)
 		printf ("[BOOM-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	}
 
-	
 	// shadow memory
 	shadow = mmap(NULL,
 				  map_size,
@@ -235,13 +236,12 @@ void gcStartup (void)
 		pthread_create(&threads[i], NULL, thread_sanitiser_gc, (void *) (i+1));
 	}
 
+	ght_set_satp_priv();
 	while (ght_get_initialisation() == 0){
  	}
-
 	asm volatile("fence rw, rw;");
 
-	printf("[Boom-C%x]: Test is now started: \r\n", BOOM_ID);
-	ght_set_satp_priv();
+	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
 	ght_set_status (0x01); // ght: start
     //===================== Execution =====================//
 }
@@ -259,7 +259,7 @@ void gcCleanup (void)
 	munmap(shadow, map_size);
 
 	if (GC_DEBUG == 1){
-		printf("[BOOM-C%x]: Test is now completed! \r\n", BOOM_ID);
+		printf("[BOOM-C-%x]: Test is now completed! \r\n", BOOM_ID);
 	}
 
 	ght_unset_satp_priv();

@@ -125,14 +125,12 @@ void gcStartup (void)
 	ght_set_satp_priv();
 	printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
 
-	/* int s;
- 	struct sched_param fifo_param;
-  	fifo_param.sched_priority=1;
- 	s = pthread_setschedparam(pthread_self(), SCHED_FIFO, &fifo_param);
-   	if (s != 0) {
-		printf("Error: Scheduling policy! %x. \r\n", s);
-   	}
-	*/
+ 	// struct sched_param fifo_param;
+  	// fifo_param.sched_priority=99;
+ 	// int s = pthread_setschedparam(pthread_self(), SCHED_FIFO, &fifo_param);
+   	// if (s != 0) {
+	// 	printf("Error: Scheduling policy! %x. \r\n", s);
+   	// }
 
 	ght_set_status (0x01); // ght: start
     //===================== Execution =====================//
