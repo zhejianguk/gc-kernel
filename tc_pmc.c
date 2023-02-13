@@ -61,7 +61,7 @@ void* thread_boom(void* args){
 	lock_acquire(&uart_lock);
 	printf("[Boom-%x]: Test is now started: \r\n", hart_id);
 	lock_release(&uart_lock);
-	ght_set_status (0x01); // ght: start
+	ght_set_status_01 (); // ght: start
 	//===================== Execution =====================//
 	int sum_temp = 0;
 	int sum = 0;
@@ -72,7 +72,7 @@ void* thread_boom(void* args){
 
 	//=================== Post execution ===================//
 	uint64_t status;
-	ght_set_status (0x02);
+	ght_set_status_02 ();
 
 	while (((status = ght_get_status()) < 0x1FFFF) || (ght_get_buffer_status() != GHT_EMPTY)){
 	}
@@ -83,7 +83,7 @@ void* thread_boom(void* args){
 	lock_release(&uart_lock);
 
 	ght_unset_satp_priv();
-	ght_set_status (0x00);
+	ght_set_status_00 ();
 	
 	return NULL;
 }

@@ -38,7 +38,7 @@ void* thread_pmc_gc(void* args){
 		printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
 	}
 
-	ghe_initailised(1);
+	ghe_initailised();
 
 	//===================== Execution =====================// 
 	while (ghe_checkght_status() != 0x02){
@@ -101,7 +101,7 @@ void* thread_pmc_gc(void* args){
 		printf("[Rocket-C%x-PMC]: Completed, PMC = %lx! \r\n", hart_id, perfc);
 	}
 
-	ghe_initailised(0);
+	ghe_deinitailised();
 
 	return NULL;
 }
@@ -132,14 +132,14 @@ void gcStartup (void)
 	// 	printf("Error: Scheduling policy! %x. \r\n", s);
    	// }
 
-	ght_set_status (0x01); // ght: start
+	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }
   
 void gcCleanup (void)
 {	
 	//=================== Post execution ===================//
-    ght_set_status (0x02);
+    ght_set_status_02 ();
     // GC threads.
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
@@ -150,6 +150,6 @@ void gcCleanup (void)
 	}
 
 	ght_unset_satp_priv();
-	ght_set_status (0x00);
+	ght_set_status_00 ();
 }
 

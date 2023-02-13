@@ -26,9 +26,25 @@ static inline uint64_t debug_ecounter ()
 }
 */
 
-static inline void ght_set_status (uint64_t status)
+
+static inline void ght_set_status_00 ()
 {
-  ROCC_INSTRUCTION_SS (1, status, 0X01, 0x06);
+  ROCC_INSTRUCTION (1, 0x30);
+}
+
+static inline void ght_set_status_01 ()
+{
+  ROCC_INSTRUCTION (1, 0x31);
+}
+
+static inline void ght_set_status_02 ()
+{
+  ROCC_INSTRUCTION (1, 0x32);
+}
+
+static inline void ght_set_status_04 ()
+{
+  ROCC_INSTRUCTION (1, 0x34);
 }
 
 static inline uint64_t ght_get_status ()

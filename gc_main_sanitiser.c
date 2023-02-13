@@ -28,7 +28,6 @@ void report_error(uint64_t offset){
 	} else {
 		PC = ghe_get_fifocache1();
 	}
-
 	printf("**Error** accesses at PC: %x.\r\n", PC);
 }
 
@@ -53,13 +52,28 @@ void* thread_sanitiser_gc(void* args){
 	}
 	
 	ghe_go();
-	ghe_initailised(1);
+	ghe_initailised();
 
 	//===================== Execution =====================//
 	while (ghe_checkght_status() != 0x02){
 		// Run analysis
 		uint32_t buffer_depth = ghe_get_bufferdepth();
-		while (buffer_depth > 7){
+		while (buffer_depth > 9){
+			ROCC_INSTRUCTION_D (1, Address1, 0x0D);
+			ROCC_INSTRUCTION_D (1, Address2, 0x0D);
+			bits1 = shadow[(Address1)>>7];
+			if (bits1 != 0){
+				if(bits1 & (1<<((Address1 >> 7)&8))) {
+					report_error(1);
+				}
+			}
+			bits2 = shadow[(Address2)>>7];
+			if (bits2 != 0){
+				if(bits2 & (1<<((Address2 >> 7)&8))) {
+					report_error(0);
+				}
+			}
+
 			ROCC_INSTRUCTION_D (1, Address1, 0x0D);
 			ROCC_INSTRUCTION_D (1, Address2, 0x0D);
 			bits1 = shadow[(Address1)>>7];
@@ -124,6 +138,24 @@ void* thread_sanitiser_gc(void* args){
 
 		if (buffer_depth > 0){
 			switch (buffer_depth){
+				case 9:
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
+				case 8:
+					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
+					bits = shadow[(Address)>>7];
+					if (bits != 0){
+						if(bits & (1<<((Address >> 7)&8))) {
+							report_error(0);
+						}
+					}
+
 				case 7:
 					ROCC_INSTRUCTION_D (1, Address, 0x0D); 
 					bits = shadow[(Address)>>7];
@@ -205,7 +237,7 @@ void* thread_sanitiser_gc(void* args){
 	}
 
 	//=================== Post execution ===================//
-	ghe_initailised(0);
+	ghe_deinitailised();
 	ghe_release();
 
 	return NULL; 
@@ -218,6 +250,7 @@ void gcStartup (void)
     if (gc_pthread_setaffinity(BOOM_ID) != 0) {
 		printf ("[BOOM-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	}
+	ght_set_satp_priv();
 
 	// shadow memory
 	shadow = mmap(NULL,
@@ -225,43 +258,45 @@ void gcStartup (void)
 				  PROT_WRITE | PROT_READ,
 				  MAP_PRIVATE | MAP_ANON | MAP_NORESERVE,
 				  -1, 0);
+	asm volatile("fence rw, rw;");
 
 	if(shadow == NULL) {
 		printf("[BOOM-C%x]: Error! memory is not allocated.", BOOM_ID);
 	}
-	asm volatile("fence rw, rw;");
-
 	// GC threads
     for (uint64_t i = 0; i < NUM_CORES - 1; i++) {
 		pthread_create(&threads[i], NULL, thread_sanitiser_gc, (void *) (i+1));
 	}
 
-	ght_set_satp_priv();
 	while (ght_get_initialisation() == 0){
  	}
 	asm volatile("fence rw, rw;");
 
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
-	ght_set_status (0x01); // ght: start
+	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }
   
 void gcCleanup (void)
 {	
 	//=================== Post execution ===================//
-    ght_set_status (0x02);
+    ght_set_status_02 ();
 
     // GC threads.
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
 	}
 	
-	munmap(shadow, map_size);
+	int s = munmap(shadow, map_size);
+
+	if(s != 0) {
+		printf("[BOOM-C%x]: Error! memory is not allocated.", BOOM_ID);
+	}
 
 	if (GC_DEBUG == 1){
 		printf("[BOOM-C-%x]: Test is now completed! \r\n", BOOM_ID);
 	}
 
 	ght_unset_satp_priv();
-	ght_set_status (0x00);
+	ght_set_status_00 ();
 }

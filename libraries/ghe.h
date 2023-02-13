@@ -50,17 +50,17 @@ static inline uint64_t ghe_checkght_status ()
 
 static inline void ghe_complete ()
 {
-  ROCC_INSTRUCTION_S (1, 0x01, 0x01);
+  ROCC_INSTRUCTION (1, 0x41);
 }
 
 static inline void ghe_release ()
 {
-  ROCC_INSTRUCTION_S (1, 0xFF, 0x01);
+  ROCC_INSTRUCTION (1, 0x43);
 }
 
 static inline void ghe_go ()
 {
-  ROCC_INSTRUCTION_S (1, 0x00, 0x01);
+  ROCC_INSTRUCTION (1, 0x40);
 }
 
 static inline uint64_t ghe_agg_status ()
@@ -102,10 +102,18 @@ int gc_pthread_setaffinity(uint64_t phart_id){
 	return s;
 } 
 
-static inline uint64_t ghe_initailised (uint64_t if_initailised)
+
+static inline void ghe_initailised ()
 {
-  ROCC_INSTRUCTION_S (1, if_initailised, 0x24);
+  ROCC_INSTRUCTION (1, 0x51);
 }
+
+static inline void ghe_deinitailised ()
+{
+  ROCC_INSTRUCTION (1, 0x50);
+}
+
+
 
 static inline uint64_t ghe_get_bufferdepth ()
 {

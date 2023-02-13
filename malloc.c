@@ -1486,15 +1486,15 @@ int debug = 0;
 void poison(void* start, size_t bytes) {
 
   if (ght_get_initialisation() == 1) {
-    ght_set_status (0x04); // ght: pause
+    ght_set_status_04 (); // ght: pause
     // char* str1 = "A";
     // write(STDOUT_FILENO, str1, strlen(str1));
 
     while (ght_get_status() < 0xFFFF) {
       //drain_checkers();
-      ght_set_status (0x04); // ght: pause
+      ght_set_status_04 (); // ght: pause
     }
-    ght_set_status(0x00); // ght: run, but no filtering
+    ght_set_status_00 (); // ght: run, but no filtering
 
     char* start_s = &shadow[((long)start)>>7];
     char* end_s = &shadow[((long)(start+bytes))>>7];
@@ -1517,26 +1517,27 @@ void poison(void* start, size_t bytes) {
       *start_s=-1;
     }
    
-    while (ght_get_status() != 0) {
-      ght_set_status(0x00);
+    while (ght_get_status() > 0xFFFF) {
+      ght_set_status_00 ();
     }
 
-    ght_set_status (0x01);
+    asm volatile("fence rw, rw;");
+    ght_set_status_01 ();
   }
 }
 
 
 void unpoison(void* start, size_t bytes) {
   if (ght_get_initialisation() == 1) {
-    ght_set_status (0x04); // ght: pause
+    ght_set_status_04 (); // ght: pause
 
     // char* str3 = "B";
     // write(STDOUT_FILENO, str3, strlen(str3));
     
     while (ght_get_status() < 0xFFFF) {
-      ght_set_status (0x04); // ght: pause
+      ght_set_status_04 (); // ght: pause
     }
-    ght_set_status(0x00); // ght: run, but no filtering
+    ght_set_status_00 (); // ght: run, but no filtering
 
     char* start_s = &shadow[((long)start)>>7];
 	  char* end_s = &shadow[((long)(start+bytes))>>7];
@@ -1559,11 +1560,12 @@ void unpoison(void* start, size_t bytes) {
       *start_s=0;
 	  }
 
-    while (ght_get_status() != 0) {
-      ght_set_status(0x00);
+    while (ght_get_status() > 0xFFFF) {
+      ght_set_status_00 ();
     }
     
-    ght_set_status (0x01);
+    asm volatile("fence rw, rw;");
+    ght_set_status_01 ();
   }
 }
 
