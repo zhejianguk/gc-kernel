@@ -1,7 +1,7 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 
-#define MAX 128
+#define MAX 256*1024*1024
 
 
 
@@ -12,24 +12,24 @@ typedef struct dequeue
 } dequeue;
  
 
-void initialize(dequeue *P) {
+static inline void initialize(dequeue *P) {
   P->rear=-1;
   P->front=-1;
 }
  
-int empty(dequeue *P) {
+static inline int empty(dequeue *P) {
   if(P->rear==-1)
     return(1);
   return(0);
 }
  
-int full(dequeue *P) {
+static inline int full(dequeue *P) {
   if((P->rear+1)%MAX==P->front)
     return(1);
   return(0);
 }
  
-void enqueueR(dequeue *P, uint64_t x) {
+static inline void enqueueR(dequeue *P, uint64_t x) {
   if(empty(P)){
     P->rear=0;
     P->front=0;
@@ -40,7 +40,7 @@ void enqueueR(dequeue *P, uint64_t x) {
   }
 }
  
-void enqueueF(dequeue *P,uint64_t x) {
+static inline void enqueueF(dequeue *P,uint64_t x) {
   if(empty(P)) {
     P->rear=0;
     P->front=0;
@@ -51,7 +51,7 @@ void enqueueF(dequeue *P,uint64_t x) {
   }
 }
  
-uint64_t dequeueF(dequeue *P)  {
+static inline uint64_t dequeueF(dequeue *P)  {
   uint64_t x;
   x=P->data[P->front];
   if(P->rear==P->front) {//delete the last element
@@ -62,7 +62,7 @@ uint64_t dequeueF(dequeue *P)  {
   return(x);
 }
  
-uint64_t dequeueR(dequeue *P) {
+static inline uint64_t dequeueR(dequeue *P) {
   uint64_t x;
   x=P->data[P->rear];
   if(P->rear==P->front)
@@ -72,7 +72,7 @@ uint64_t dequeueR(dequeue *P) {
   return(x);
 }
  
-uint64_t queueT (dequeue *P)  {
+static inline uint64_t queueT (dequeue *P)  {
   uint64_t x;
   x=P->data[P->front];
   return(x);

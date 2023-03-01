@@ -156,7 +156,7 @@ uint64_t task_synthetic_malloc (uint64_t base)
 }
 */
 
-static inline uint64_t ght_set_num_of_checkers (uint64_t num)
+static inline void ght_set_num_of_checkers (uint64_t num)
 {
   ROCC_INSTRUCTION_S (1, num, 0x1c);
 }

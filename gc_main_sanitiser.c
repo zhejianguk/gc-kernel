@@ -51,6 +51,7 @@ void* thread_sanitiser_gc(void* args){
 		printf ("[Rocket-C%x-Sani]: pthread_setaffinity failed.", hart_id);
 	}
 	
+	asm volatile("fence rw, rw;");
 	ghe_go();
 	ghe_initailised();
 
@@ -258,6 +259,7 @@ void gcStartup (void)
 				  PROT_WRITE | PROT_READ,
 				  MAP_PRIVATE | MAP_ANON | MAP_NORESERVE,
 				  -1, 0);
+	
 	asm volatile("fence rw, rw;");
 
 	if(shadow == NULL) {
@@ -270,9 +272,9 @@ void gcStartup (void)
 
 	while (ght_get_initialisation() == 0){
  	}
-	asm volatile("fence rw, rw;");
 
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
+	asm volatile("fence rw, rw;");
 	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }

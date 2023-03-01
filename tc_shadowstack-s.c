@@ -151,7 +151,7 @@ void* thread_shadowstack_s(void* args){
 	}
 
 	//===================== Execution =====================// 
-	 while (ghe_checkght_status() != 0x02){
+	while (ghe_checkght_status() != 0x02){
 		while (ghe_status() != GHE_EMPTY){
 			ROCC_INSTRUCTION_D (1, Header, 0x0A);
 			ROCC_INSTRUCTION_D (1, Payload, 0x0D);

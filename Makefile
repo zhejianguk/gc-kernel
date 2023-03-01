@@ -1,4 +1,5 @@
 CC = riscv64-unknown-linux-gnu-gcc
+CPP = riscv64-unknown-linux-gnu-g++
 
 OFLAGS := -O3 -DRISCV -march=rv64imafd -DUSE_PUBLIC_MALLOC_WRAPPERS
 CFLAGS:= -O3 -DRISCV -march=rv64imafd
@@ -15,8 +16,22 @@ initialisation_pmc: initialisation_pmc.c
 initialisation_sanitiser: initialisation_sanitiser.c
 	${CC} ${CFLAGS} -o initialisation_sanitiser.riscv initialisation_sanitiser.c -lpthread
 
+initialisation_shadowstack: initialisation_shadowstack.c
+	${CC} ${CFLAGS} -o initialisation_shadowstack.riscv initialisation_shadowstack.c -lpthread
+
+initialisation_ss: initialisation_ss.c
+	${CC} ${CFLAGS} -o initialisation_ss.riscv initialisation_ss.c -lpthread
+
+
+
 gc_main_pmc: gc_main_pmc.c
 	${CC} ${CFLAGS} -c gc_main_pmc.c -lpthread
+
+gc_main_shadowstack: gc_main_shadowstack.c
+	${CC} ${CFLAGS} -c gc_main_shadowstack.c -lpthread
+
+gc_main_ss: gc_main_ss.cpp
+	${CPP} ${CFLAGS} -c gc_main_ss.cpp -lpthread
 
 gc_main_none: gc_main_none.c
 	${CC} ${CFLAGS} -c gc_main_none.c -lpthread
