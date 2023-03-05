@@ -1483,8 +1483,11 @@ extern int if_tasks_initalised[NUM_CORES];
 
 int debug = 0;
 
-void poison(void* start, size_t bytes) {
+#define GCKERNEL_SS 1
+#define GCKERNEL_Sani 0
 
+void poison(void* start, size_t bytes) {
+if (GCKERNEL_Sani == 1) {
   if (ght_get_initialisation() == 1) {
     ght_set_status_04 (); // ght: pause
     // char* str1 = "A";
@@ -1525,9 +1528,12 @@ void poison(void* start, size_t bytes) {
     ght_set_status_01 ();
   }
 }
+}
+
 
 
 void unpoison(void* start, size_t bytes) {
+if (GCKERNEL_Sani == 1) {
   if (ght_get_initialisation() == 1) {
     ght_set_status_04 (); // ght: pause
 
@@ -1568,6 +1574,7 @@ void unpoison(void* start, size_t bytes) {
     ght_set_status_01 ();
   }
 }
+}
 
 Void_t* shadow_mALLOc(size_t bytes) {
   Void_t* m;
@@ -1593,28 +1600,36 @@ void shadow_fREe(Void_t* m) {
 //===== GuardianCouncil Function: End   ====//
 
 Void_t* public_mALLOc(size_t bytes) {
+if (GCKERNEL_SS == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   Void_t* m;
-  // lock_acquire(&uart_lock);
-  // printf("Malloc: \r\n");
-  // lock_release(&uart_lock);
   if (MALLOC_PREACTION != 0) {
     return 0;
   }
   m = mALLOc(bytes+16);
   if (MALLOC_POSTACTION != 0) {
   }
-  // lock_acquire(&uart_lock);
-  // printf("Set address from: %x - %x \r\n", m, m+bytes+32);
-  // lock_release(&uart_lock);
+
+if (GCKERNEL_Sani == 1) {
   unpoison(m,bytes);
   poison(m+bytes,16);
+}
+
+if (GCKERNEL_SS == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return m;
 }
 
 void public_fREe(Void_t* m) {
-  // lock_acquire(&uart_lock);
-  // printf("Free: \r\n");
-  // lock_release(&uart_lock);
   if (MALLOC_PREACTION != 0) {
     return;
   }
@@ -1624,14 +1639,32 @@ void public_fREe(Void_t* m) {
 }
 
 Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
+if (GCKERNEL_SS == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   if (MALLOC_PREACTION != 0) {
     return 0;
   }
   m = rEALLOc(m, bytes+16);
+
+if (GCKERNEL_Sani == 1) {
   unpoison(m,bytes);
   poison(m+bytes,16);
+}
+
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL_SS == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return m;
 }
 
@@ -3861,7 +3894,7 @@ void fREe(mem) Void_t* mem;
       munmap((char*)p - offset, size + offset);
 #endif
     }
-    poison((long*)m,chunksize-0x11);
+    // poison((long*)m,chunksize-0x11);
   }
 }
 

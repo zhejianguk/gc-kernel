@@ -1,6 +1,7 @@
 #ifndef _GNU_SOURCE
 	#define _GNU_SOURCE             /* See feature_test_macros(7) */
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -10,10 +11,8 @@
 #include "libraries/ght.h"
 #include "libraries/ghe.h"
 #include "libraries/gc_top.h"
-#include "libraries/spin_lock.h"
-
   
-void main (void)
+int main (void)
 {	
    	//================== Initialisation ==================//
     // Bound current thread to BOOM
@@ -48,14 +47,14 @@ void main (void)
 	// Data path: ALU + JALR
 	ght_cfg_filter(0x01, 0x00, 0x67, 0x01);
 
-	// Insepct Special RET 
+	// Insepct RVC RET 
   	// inst_index: 0x01
   	// Func: 0x00
   	// Opcode: 0x02
   	// Data path: ALU + JALR
   	ght_cfg_filter_rvc(0x01, 0x00, 0x02, 0x01);
 
-	// Insepct Special JALR 
+	// Insepct RVC JALR 
 	// inst_index: 0x01
 	// Func: 0x01
 	// Opcode: 0x02
@@ -69,5 +68,6 @@ void main (void)
 	ght_cfg_mapper (0x01, 0b0001);
 
 	printf("[Boom-%x]: Initialisation for ShadowStack (SS) is now completed, number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
+	return 0;
 }
 

@@ -20,20 +20,14 @@ pthread_t threads[NUM_CORES-1];
 
 void* thread_shadowstack_gc(void* args){
 	uint64_t hart_id = (uint64_t) args;
+	std::deque<uint64_t> shadow;
 
 	// GC variables
 	uint64_t Header,Payload, PC, Inst;
-	std::deque<uint64_t> shadow;
-
 	//================== Initialisation ==================//
 	if (gc_pthread_setaffinity(hart_id) != 0){
 		printf ("[Rocket-C%x-SS]: pthread_setaffinity failed.", hart_id);
 	}
-	
-
-	printf ("[Rocket-C%x-SS]: ShadowStack is initialised! \r\n", hart_id);
-
-	// shadow.resize(1024*1024*4);
 
 	ghe_initailised();
 	//===================== Execution =====================//
@@ -41,48 +35,28 @@ void* thread_shadowstack_gc(void* args){
 		while (ghe_status() != GHE_EMPTY){
 			ROCC_INSTRUCTION_D (1, Payload, 0x0D);
 			uint64_t type = Payload & 0x03;
-			uint64_t address = Payload >> 2;
 
-			// Push -- a function is called
 			if (type == 1) {
-				shadow.push_front(address);
-				if (GC_DEBUG) {
-					Header = ghe_get_fifocache0();
-					PC = Header >> 32;
-					Inst = Header & 0xFFFFFFFF;
-					printf("[C%x SS]: <<Pushed>> Expected: %x.                        PC: %x. Inst: %x. \r\n", hart_id, address, PC, Inst);
-				}
-			} else {
-				if (type == 2) {
-					if (!shadow.empty()) {
-						uint64_t comp = shadow.front();
-						shadow.pop_front();
-						if (comp != address){
-							Header = ghe_get_fifocache0();
-							PC = Header >> 32;
-							Inst = Header & 0xFFFFFFFF;
-							printf("[C%x SS]: **Error**  Expected: %x. v.s. Pulled: %x. PC: %x. Inst: %x. \r\n", hart_id, comp, address, PC, Inst);
-							// return -1;
-						} else {
-							if (GC_DEBUG) {
-								Header = ghe_get_fifocache0();
-								PC = Header >> 32;
-								Inst = Header & 0xFFFFFFFF;
-								printf("[C%x SS]: --Paried-- Expected: %x. v.s. Pulled: %x. PC: %x. Inst: %x. \r\n", hart_id, comp, address, PC, Inst);
-							}
-						}
+				shadow.push_front(Payload);
+			} else if (type == 2) {
+				if (!shadow.empty()) {
+					uint64_t comp = shadow.front() + 1;
+					shadow.pop_front();
+					if (comp != Payload){
+						printf("[Rocket-C%x-SS]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
 					}
 				}
 			}
 		}
 	}
-
 	//=================== Post execution ===================//
 	ghe_deinitailised();
 	ghe_release();
 
 	return NULL; 
 }
+
+
 
 void gcStartup (void)
 {
@@ -92,8 +66,7 @@ void gcStartup (void)
 		printf ("[BOOM-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	}
 	
-	// GC threads
-    for (uint64_t i = 0; i < NUM_CORES - 1; i++) {
+	for (uint64_t i = 0; i < NUM_CORES - 1; i++) {
 		pthread_create(&threads[i], NULL, thread_shadowstack_gc, (void *) (i+1));
 	}
 
@@ -102,7 +75,6 @@ void gcStartup (void)
 	
 	ght_set_satp_priv();
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
-	asm volatile("fence rw, rw;");
 	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }
@@ -112,7 +84,6 @@ void gcCleanup (void)
 	//=================== Post execution ===================//
     ght_set_status_02 ();
 
-    // GC threads.
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
 	}

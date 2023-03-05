@@ -16,22 +16,13 @@ initialisation_pmc: initialisation_pmc.c
 initialisation_sanitiser: initialisation_sanitiser.c
 	${CC} ${CFLAGS} -o initialisation_sanitiser.riscv initialisation_sanitiser.c -lpthread
 
-initialisation_shadowstack: initialisation_shadowstack.c
-	${CC} ${CFLAGS} -o initialisation_shadowstack.riscv initialisation_shadowstack.c -lpthread
-
-initialisation_ss: initialisation_ss.c
-	${CC} ${CFLAGS} -o initialisation_ss.riscv initialisation_ss.c -lpthread
+initialisation_ss: initialisation_ss.cpp
+	${CPP} ${CFLAGS} -o initialisation_ss.riscv initialisation_ss.cpp -lpthread
 
 
 
 gc_main_pmc: gc_main_pmc.c
 	${CC} ${CFLAGS} -c gc_main_pmc.c -lpthread
-
-gc_main_shadowstack: gc_main_shadowstack.c
-	${CC} ${CFLAGS} -c gc_main_shadowstack.c -lpthread
-
-gc_main_ss: gc_main_ss.cpp
-	${CPP} ${CFLAGS} -c gc_main_ss.cpp -lpthread
 
 gc_main_none: gc_main_none.c
 	${CC} ${CFLAGS} -c gc_main_none.c -lpthread
@@ -39,8 +30,14 @@ gc_main_none: gc_main_none.c
 gc_main_sanitiser: gc_main_sanitiser.c
 	${CC} ${CFLAGS_CM} -c gc_main_sanitiser.c -lpthread
 
+gc_main_ss: gc_main_ss.cpp
+	${CPP} ${CFLAGS_CM} -c gc_main_ss.cpp -lpthread
+
 malloc: malloc.c
 	${CC} ${OFLAGS} -c malloc.c
+
+gc_checker_ss: gc_checker_ss.cpp
+	${CPP} ${CFLAGS} -o gc_checker_ss.riscv gc_checker_ss.cpp -lpthread
 
 ################################################
 # Some test casese
