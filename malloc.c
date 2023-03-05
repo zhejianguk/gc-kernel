@@ -1483,7 +1483,7 @@ extern int if_tasks_initalised[NUM_CORES];
 
 int debug = 0;
 
-#define GCKERNEL_SS 1
+#define GCKERNEL 1
 #define GCKERNEL_Sani 0
 
 void poison(void* start, size_t bytes) {
@@ -1600,7 +1600,7 @@ void shadow_fREe(Void_t* m) {
 //===== GuardianCouncil Function: End   ====//
 
 Void_t* public_mALLOc(size_t bytes) {
-if (GCKERNEL_SS == 1){
+if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
     ght_set_status_04 (); // ght: pause
@@ -1620,7 +1620,7 @@ if (GCKERNEL_Sani == 1) {
   poison(m+bytes,16);
 }
 
-if (GCKERNEL_SS == 1){
+if (GCKERNEL == 1){
   if (ght_get_initialisation() == 1) {
     ght_set_status_01 ();
     asm volatile("fence rw, rw;");
@@ -1639,7 +1639,7 @@ void public_fREe(Void_t* m) {
 }
 
 Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
-if (GCKERNEL_SS == 1){
+if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
     ght_set_status_04 (); // ght: pause
@@ -1659,7 +1659,7 @@ if (GCKERNEL_Sani == 1) {
   if (MALLOC_POSTACTION != 0) {
   }
 
-if (GCKERNEL_SS == 1){
+if (GCKERNEL == 1){
   if (ght_get_initialisation() == 1) {
     ght_set_status_01 ();
     asm volatile("fence rw, rw;");
