@@ -1,9 +1,7 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 
-#define MAX 256*1024*1024
-
-
+#define MAX 1024
 
 typedef struct dequeue
 {

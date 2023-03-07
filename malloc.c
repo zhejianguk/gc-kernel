@@ -1630,12 +1630,26 @@ if (GCKERNEL == 1){
 }
 
 void public_fREe(Void_t* m) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   if (MALLOC_PREACTION != 0) {
     return;
   }
   fREe(m);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
 }
 
 Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
@@ -1669,6 +1683,13 @@ if (GCKERNEL == 1){
 }
 
 Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   Void_t* m;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1676,10 +1697,24 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
   m = mEMALIGn(alignment, bytes);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return m;
 }
 
 Void_t* public_vALLOc(size_t bytes) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   Void_t* m;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1687,10 +1722,24 @@ Void_t* public_vALLOc(size_t bytes) {
   m = vALLOc(bytes);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return m;
 }
 
 Void_t* public_pVALLOc(size_t bytes) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   Void_t* m;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1698,10 +1747,24 @@ Void_t* public_pVALLOc(size_t bytes) {
   m = pVALLOc(bytes);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}  
   return m;
 }
 
 Void_t* public_cALLOc(size_t n, size_t elem_size) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   Void_t* m;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1710,11 +1773,25 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
   // unpoison(m,n*elem_size);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}  
   return m;
 }
 
 
 Void_t** public_iCALLOc(size_t n, size_t elem_size, Void_t** chunks) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   Void_t** m;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1722,10 +1799,24 @@ Void_t** public_iCALLOc(size_t n, size_t elem_size, Void_t** chunks) {
   m = iCALLOc(n, elem_size, chunks);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+} 
   return m;
 }
 
 Void_t** public_iCOMALLOc(size_t n, size_t sizes[], Void_t** chunks) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   Void_t** m;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1733,16 +1824,37 @@ Void_t** public_iCOMALLOc(size_t n, size_t sizes[], Void_t** chunks) {
   m = iCOMALLOc(n, sizes, chunks);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+} 
   return m;
 }
 
 void public_cFREe(Void_t* m) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_04 (); // ght: pause
+  }
+}
+
   if (MALLOC_PREACTION != 0) {
     return;
   }
   cFREe(m);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+} 
 }
 
 int public_mTRIm(size_t s) {
