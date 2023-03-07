@@ -12,6 +12,8 @@
 #include "libraries/ghe.h"
 #include "libraries/gc_top.h"
 #include "libraries/deque.h"
+#include "libraries/queue.h"
+
 
 void gcStartup (void) __attribute__ ((constructor));
 void gcCleanup (void) __attribute__ ((destructor));
@@ -45,15 +47,13 @@ void* thread_shadowstack_gc(void* args){
 				if (empty(&shadow) != 1) {
 					uint64_t comp = dequeueF(&shadow) + 1;
 					if (comp != Payload){
-						printf("\r\n [Rocket-C%x-SS]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
+						printf("[Rocket-C%x-SS]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
 					}
 				} else {
 					// Send it to AGG
-					/*
 					while (ghe_agg_status() == GHE_FULL) {
 					}
 					ghe_agg_push (hart_id, Payload);
-					*/
 				}
 			}
 		}
@@ -63,11 +63,9 @@ void* thread_shadowstack_gc(void* args){
 			// Send unpaired pushes
 			while ((empty(&shadow) == 0)) {
 				S_Payload = dequeueR(&shadow);
-				/*
 				while (ghe_agg_status() == GHE_FULL) {
 				}
 				ghe_agg_push (hart_id, S_Payload);
-				*/
 			}
 		
 			// Send termination flag
@@ -90,36 +88,27 @@ void* thread_shadowstack_gc(void* args){
 /*
 void clear_queue(int index)
 {
-  	while (!queues[index].empty()) {
-		uint64_t Payload_q = queues[index].back();
-		queues[index].pop_back();
+  	while (empty(&queues[index]) == 0) {
+		uint64_t Payload_q = dequeueR(&queues[index]);
 		uint64_t type_q = Payload_q & 0x03;
 
 		if (type_q == 1) {
-			shadow_agg.push_front(Payload_q);
+			enqueueF(&shadow_agg, Payload_q);
 		} else if (type_q == 2) {
-			if (!shadow_agg.empty()) {
-				uint64_t comp_q = shadow_agg.front() + 1;
-				shadow_agg.pop_front();
+			if (empty(&shadow_agg) != 1) {
+				uint64_t comp_q = dequeueF(&shadow_agg) + 1;
 				if (comp_q != Payload_q){
 					printf("[Rocket-SS-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", comp_q>>2, Payload_q>>2);
 				}
 			}
 		}
-
-
 	}
 }
 */
 
-uint64_t nxt_target (uint64_t c_current, uint64_t c_start, uint64_t c_end)
+static inline uint64_t nxt_target (uint64_t c_current, uint64_t c_start, uint64_t c_end)
 {
-	uint64_t c_nxt;
-	if (c_current == c_end) {
-    	c_nxt = c_start;
-  	} else {
-    	c_nxt = c_current + 1;
-  	}
+	uint64_t c_nxt = (c_current == c_end) ? c_start : c_current + 1;
   	return c_nxt;
 }
 
@@ -136,9 +125,9 @@ void* thread_shadowstack_agg_gc(void* args){
 	}
 
 	dequeue queues[NUM_CORES];
-	dequeue shadow_agg;
+	queue shadow_agg;
 
-	initialize(&shadow_agg);
+	q_initialize(&shadow_agg);
 	for (int i = 0; i < NUM_CORES; i ++) {
 		initialize(&queues[i]);
 	}
@@ -157,24 +146,65 @@ void* thread_shadowstack_agg_gc(void* args){
 
 			if (from == CurrentTarget) { // Push
 				uint64_t type = Payload & 0x03;
-				if (type == 3) { // clear queue
-					// clear_queue(CurrentTarget);
+				if (type == 1) {
+					q_enqueueF(&shadow_agg, Payload);
+				} else if (type == 2){
+					if (q_empty(&shadow_agg) != 1){
+						uint64_t comp = q_dequeueF(&shadow_agg) + 1;
+						if (comp != Payload){
+							printf("[Rocket-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
+						}
+					}
+				} else if (type == 3) { // clear queue
 					ROCC_INSTRUCTION_S(1, 0x01 << (CurrentTarget-1), 0x21); // Restart CurrentTarget for scheduling
 					CurrentTarget = nxt_target(CurrentTarget, 1, NUM_CORES-2);
 					if (GC_DEBUG){
 						printf("[Rocket-SS-AGG]: == Current Target: %x. == \r\n", CurrentTarget);
 					}
 
-					while ((empty(&queues[CurrentTarget]) == 0) && ((queueT(&queues[CurrentTarget]) & 0xFFFFFFFF) == 0xFFFFFFFF)) {
+					while ((empty(&queues[CurrentTarget]) == 0) && (queueT(&queues[CurrentTarget]) == 0xFFFFFFFF)) {
 						dequeueF(&queues[CurrentTarget]); // remove the top
-						// clear queue (CurrentTarget);
+						/* Clear Queue */
+						uint64_t index = CurrentTarget;
+						while (empty(&queues[index]) == 0) {
+							uint64_t Payload_q = dequeueR(&queues[index]);
+							uint64_t type_q = Payload_q & 0x03;
+
+							if (type_q == 1) {
+								q_enqueueF(&shadow_agg, Payload_q);
+							} else if (type_q == 2) {
+								if (q_empty(&shadow_agg) != 1) {
+									uint64_t comp_q = q_dequeueF(&shadow_agg) + 1;
+									if (comp_q != Payload_q){
+										printf("[Rocket-SS-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", comp_q>>2, Payload_q>>2);
+									}
+								}
+							}
+						}
+
 						ROCC_INSTRUCTION_S(1, 0x01 << (CurrentTarget-1), 0x21); // Restart CurrentTarget for scheduling
 						CurrentTarget = nxt_target(CurrentTarget, 1, NUM_CORES-2);
 						if (GC_DEBUG){
 							printf("[Rocket-SS-AGG]: == Current Target: %x. == \r\n", CurrentTarget);
 						}
 					}
-					// clear_queue(CurrentTarget);
+					/* Clear Queue */
+					uint64_t index = CurrentTarget;
+					while (empty(&queues[index]) == 0) {
+						uint64_t Payload_q = dequeueR(&queues[index]);
+						uint64_t type_q = Payload_q & 0x03;
+
+						if (type_q == 1) {
+							q_enqueueF(&shadow_agg, Payload_q);
+						} else if (type_q == 2) {
+							if (q_empty(&shadow_agg) != 1) {
+								uint64_t comp_q = q_dequeueF(&shadow_agg) + 1;
+								if (comp_q != Payload_q){
+									printf("[Rocket-SS-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", comp_q>>2, Payload_q>>2);
+								}
+							}
+						}
+					}
 				}
 			} else {
 				enqueueF(&queues[from], Payload);
@@ -203,10 +233,13 @@ void gcStartup (void)
 
 	pthread_create(&threads[NUM_CORES-2], NULL, thread_shadowstack_agg_gc, (void *) (NUM_CORES-1));
 
+	for (int c = 1; c < NUM_CORES -1; c++){
+		ROCC_INSTRUCTION_S(1, 0x01 << (c-1), 0x21); // Restart Checkers
+	}
+	ght_cfg_se (0x00, NUM_CORES-2, 0x0f, 0x01); // Reset SE 0x00
+
 	while (ght_get_initialisation() == 0){
  	}
-
-	ght_cfg_se (0x00, NUM_CORES-2, 0x0f, 0x01); // Reset SE 0x00
 	
 	ght_set_satp_priv();
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
