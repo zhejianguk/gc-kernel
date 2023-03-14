@@ -12,6 +12,7 @@
 #include "libraries/ght.h"
 #include "libraries/ghe.h"
 #include "libraries/gc_top.h"
+#include <time.h>
 
 void gcStartup (void) __attribute__ ((constructor));
 void gcCleanup (void) __attribute__ ((destructor));
@@ -23,12 +24,13 @@ void* thread_shadowstack_gc(void* args){
 	std::deque<uint64_t> shadow;
 
 	// GC variables
-	uint64_t Header,Payload, PC, Inst;
+	uint64_t Payload;
 	//================== Initialisation ==================//
 	if (gc_pthread_setaffinity(hart_id) != 0){
-		printf ("[Rocket-C%x-SS]: pthread_setaffinity failed.", hart_id);
+		printf ("Pthread_setaffinity failed.");
 	}
 
+	ghe_go();
 	ghe_initailised();
 	//===================== Execution =====================//
 	while (ghe_checkght_status() != 0x02){
@@ -43,10 +45,19 @@ void* thread_shadowstack_gc(void* args){
 					uint64_t comp = shadow.front() + 1;
 					shadow.pop_front();
 					if (comp != Payload){
-						printf("[Rocket-C%x-SS]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
+						printf("Exp:%x v.s. Pul:%x! \r\n", comp, Payload);
 					}
 				}
 			}
+		}
+
+		// Dedicated for shadowstack 
+		if (ghe_checkght_status() == 0x04) {
+			ghe_complete();
+			while(ghe_checkght_status() == 0x04) {
+				ghe_complete();
+			}
+			ghe_go();
 		}
 	}
 	//=================== Post execution ===================//
@@ -57,6 +68,7 @@ void* thread_shadowstack_gc(void* args){
 }
 
 
+struct timespec start, end;
 
 void gcStartup (void)
 {
@@ -73,8 +85,9 @@ void gcStartup (void)
 	while (ght_get_initialisation() == 0){
  	}
 	
-	ght_set_satp_priv();
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
+	clock_gettime(CLOCK_MONOTONIC_RAW, &start); // get start time
+	ght_set_satp_priv();
 	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }
@@ -83,10 +96,14 @@ void gcCleanup (void)
 {	
 	//=================== Post execution ===================//
     ght_set_status_02 ();
-
+	clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+	
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
 	}
+
+	double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("==== Execution time: %f seconds ==== \r\n", elapsed);
 
 	if (GC_DEBUG == 1){
 		printf("[BOOM-C-%x]: Test is now completed! \r\n", BOOM_ID);

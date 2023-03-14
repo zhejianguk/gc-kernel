@@ -47,6 +47,24 @@ static inline void ght_set_status_04 ()
   ROCC_INSTRUCTION (1, 0x34);
 }
 
+static inline void ght_set_status_06 ()
+{
+  ROCC_INSTRUCTION (1, 0x36);
+}
+
+static inline void ght_set_critial (uint64_t critial_or_not)
+{
+  ROCC_INSTRUCTION_S (1, critial_or_not, 0x39);
+}
+
+static inline uint64_t ght_check_critial ()
+{
+  uint64_t critial_or_not;
+  ROCC_INSTRUCTION_D (1, critial_or_not, 0x49);
+  return critial_or_not;
+}
+
+
 static inline uint64_t ght_get_status ()
 {
   uint64_t get_status;

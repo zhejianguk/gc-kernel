@@ -28,10 +28,10 @@ malloc: malloc.c
 	${CC} ${OFLAGS} -c malloc.c
 
 gc_main_none: gc_main_none.c
-	${CC} ${CFLAGS} -c gc_main_none.c -lpthread
+	${CC} ${CFLAGS_CM} -c gc_main_none.c -lpthread
 
 gc_main_pmc: gc_main_pmc.c
-	${CC} ${CFLAGS} -c gc_main_pmc.c -lpthread
+	${CC} ${CFLAGS_CM} -c gc_main_pmc.c -lpthread
 
 gc_main_sanitiser: gc_main_sanitiser.c
 	${CC} ${CFLAGS_CM} -c gc_main_sanitiser.c -lpthread
@@ -39,20 +39,11 @@ gc_main_sanitiser: gc_main_sanitiser.c
 gc_main_ss: gc_main_ss.cpp
 	${CPP} ${CFLAGS_CM} -c gc_main_ss.cpp -lpthread
 
-gc_main_ss_mc: gc_main_ss_mc.c
-	${CC} ${CFLAGS_CM} -c gc_main_ss_mc.c -lpthread
+gc_main_ss_mc: gc_main_ss_mc.cpp
+	${CPP} ${CFLAGS_CM} -c gc_main_ss_mc.cpp -lpthread
 
-gc_main_ss_mc_c1: gc_main_ss_mc_c1.cpp
-	${CPP} ${CFLAGS} -c gc_main_ss_mc_c1.cpp -lpthread
-
-gc_main_ss_mc_c2: gc_main_ss_mc_c2.cpp
-	${CPP} ${CFLAGS} -c gc_main_ss_mc_c2.cpp -lpthread
-
-gc_main_ss_mc_c3: gc_main_ss_mc_c3.cpp
-	${CPP} ${CFLAGS} -c gc_main_ss_mc_c3.cpp -lpthread
-
-gc_main_ss_mc_agg: gc_main_ss_mc_agg.cpp
-	${CPP} ${CFLAGS} -c gc_main_ss_mc_agg.cpp -lpthread
+# checker_ss: checker_ss.cpp
+#	${CPP} ${CFLAGS} -o checker_ss.riscv checker_ss.cpp -lpthread
 
 ################################################
 # Some test casese

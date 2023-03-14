@@ -23,7 +23,7 @@ int main (void)
     /*=====================*/
     /*  GC configurations  */
     /*=====================*/
-    ghm_cfg_agg(AGG_CORE_ID);
+    ghm_cfg_agg(7);
 	ght_set_num_of_checkers(NUM_CORES-1);
 	
 	// Insepct JAL 
@@ -61,9 +61,9 @@ int main (void)
 	// Data path: ALU + JALR
 	ght_cfg_filter_rvc(0x01, 0x01, 0x02, 0x01);
 
-	// se: 00, end_id: NUM_CORES-2, scheduling: rr, start_id: 0x01
+	// se: 00, end_id: NUM_CORES-1, scheduling: rr, start_id: 0x01
 	// The last checker is used for agg
-	ght_cfg_se (0x00, NUM_CORES-2, 0x01, 0x01); 
+	ght_cfg_se (0x00, NUM_CORES-1, 0x01, 0x01); 
 	
 	ght_cfg_mapper (0x01, 0b0001);
 

@@ -148,15 +148,15 @@ void* thread_shadowstack_agg_gc(void* args){
 				uint64_t type = Payload & 0x03;
 				if (type == 1) {
 					q_enqueueF(&shadow_agg, Payload);
-				} else if (type == 2){
-					if (q_empty(&shadow_agg) != 1){
+				} else if (type == 2) {
+					if (q_empty(&shadow_agg) != 1) {
 						uint64_t comp = q_dequeueF(&shadow_agg) + 1;
 						if (comp != Payload){
 							printf("[Rocket-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
 						}
 					}
-				} else if (type == 3) { // clear queue
-					ROCC_INSTRUCTION_S(1, 0x01 << (CurrentTarget-1), 0x21); // Restart CurrentTarget for scheduling
+				} else {
+					ROCC_INSTRUCTION_S(1, 0x01 << (CurrentTarget-1), 0x21);	// Restart CurrentTarget for scheduling
 					CurrentTarget = nxt_target(CurrentTarget, 1, NUM_CORES-2);
 					if (GC_DEBUG){
 						printf("[Rocket-SS-AGG]: == Current Target: %x. == \r\n", CurrentTarget);

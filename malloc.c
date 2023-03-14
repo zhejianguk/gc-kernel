@@ -1479,12 +1479,12 @@ static pthread_mutex_t mALLOC_MUTEx = PTHREAD_MUTEX_INITIALIZER;
 
 extern char* shadow;
 extern int uart_lock;
-extern int if_tasks_initalised[NUM_CORES];
 
 int debug = 0;
 
 #define GCKERNEL 1
 #define GCKERNEL_Sani 0
+#define GCKERNEL_SS 1
 
 void poison(void* start, size_t bytes) {
 if (GCKERNEL_Sani == 1) {
@@ -1523,7 +1523,6 @@ if (GCKERNEL_Sani == 1) {
     while (ght_get_status() > 0xFFFF) {
       ght_set_status_00 ();
     }
-
     asm volatile("fence rw, rw;");
     ght_set_status_01 ();
   }
@@ -1603,10 +1602,15 @@ Void_t* public_mALLOc(size_t bytes) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    if (GCKERNEL_SS == 1){
+      ght_set_status_04 (); // ght: pause
+      while (ght_get_status() < 0xFFFF) {
+        ght_set_status_04 (); // ght: pause
+      }
+    }
+    ght_set_status_00 (); // ght: pause
   }
 }
-
   Void_t* m;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1633,7 +1637,13 @@ void public_fREe(Void_t* m) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    if (GCKERNEL_SS == 1){
+      ght_set_status_04 (); // ght: pause
+      while (ght_get_status() < 0xFFFF) {
+        ght_set_status_04 (); // ght: pause
+      }
+    }
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1656,7 +1666,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1686,7 +1696,13 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    if (GCKERNEL_SS == 1){
+      ght_set_status_04 (); // ght: pause
+      while (ght_get_status() < 0xFFFF) {
+        ght_set_status_04 (); // ght: pause
+      }
+    }
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1711,7 +1727,7 @@ Void_t* public_vALLOc(size_t bytes) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1736,7 +1752,7 @@ Void_t* public_pVALLOc(size_t bytes) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1761,7 +1777,7 @@ Void_t* public_cALLOc(size_t n, size_t elem_size) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1788,7 +1804,7 @@ Void_t** public_iCALLOc(size_t n, size_t elem_size, Void_t** chunks) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1813,7 +1829,7 @@ Void_t** public_iCOMALLOc(size_t n, size_t sizes[], Void_t** chunks) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1838,7 +1854,7 @@ void public_cFREe(Void_t* m) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    ght_set_status_04 (); // ght: pause
+    ght_set_status_00 (); // ght: pause
   }
 }
 
@@ -1858,6 +1874,12 @@ if (GCKERNEL == 1){
 }
 
 int public_mTRIm(size_t s) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_00 (); // ght: pause
+  }
+}
   int result;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1865,10 +1887,23 @@ int public_mTRIm(size_t s) {
   result = mTRIm(s);
   if (MALLOC_POSTACTION != 0) {
   }
+
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return result;
 }
 
 size_t public_mUSABLe(Void_t* m) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_00 (); // ght: pause
+  }
+}
   size_t result;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1876,19 +1911,43 @@ size_t public_mUSABLe(Void_t* m) {
   result = mUSABLe(m);
   if (MALLOC_POSTACTION != 0) {
   }
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return result;
 }
 
 void public_mSTATs() {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_00 (); // ght: pause
+  }
+}
   if (MALLOC_PREACTION != 0) {
     return;
   }
   mSTATs();
   if (MALLOC_POSTACTION != 0) {
   }
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
 }
 
 struct mallinfo public_mALLINFo() {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_00 (); // ght: pause
+  }
+}
   struct mallinfo m;
   if (MALLOC_PREACTION != 0) {
     struct mallinfo nm = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -1897,10 +1956,22 @@ struct mallinfo public_mALLINFo() {
   m = mALLINFo();
   if (MALLOC_POSTACTION != 0) {
   }
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return m;
 }
 
 int public_mALLOPt(int p, int v) {
+if (GCKERNEL == 1){
+  asm volatile("fence rw, rw;");
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_00 (); // ght: pause
+  }
+}
   int result;
   if (MALLOC_PREACTION != 0) {
     return 0;
@@ -1908,6 +1979,12 @@ int public_mALLOPt(int p, int v) {
   result = mALLOPt(p, v);
   if (MALLOC_POSTACTION != 0) {
   }
+if (GCKERNEL == 1){
+  if (ght_get_initialisation() == 1) {
+    ght_set_status_01 ();
+    asm volatile("fence rw, rw;");
+  }
+}
   return result;
 }
 
