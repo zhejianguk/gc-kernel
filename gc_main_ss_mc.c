@@ -13,6 +13,7 @@
 #include "libraries/gc_top.h"
 #include "libraries/deque.h"
 #include "libraries/queue.h"
+#include <time.h>
 
 
 void gcStartup (void) __attribute__ ((constructor));
@@ -91,7 +92,6 @@ void clear_queue(int index)
   	while (empty(&queues[index]) == 0) {
 		uint64_t Payload_q = dequeueR(&queues[index]);
 		uint64_t type_q = Payload_q & 0x03;
-
 		if (type_q == 1) {
 			enqueueF(&shadow_agg, Payload_q);
 		} else if (type_q == 2) {
@@ -218,6 +218,7 @@ void* thread_shadowstack_agg_gc(void* args){
 	return NULL; 
 }
 
+struct timespec start, end;
 
 void gcStartup (void)
 {
@@ -241,8 +242,9 @@ void gcStartup (void)
 	while (ght_get_initialisation() == 0){
  	}
 	
-	ght_set_satp_priv();
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
+	clock_gettime(CLOCK_MONOTONIC_RAW, &start); // get start time
+	ght_set_satp_priv();
 	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }
@@ -251,10 +253,14 @@ void gcCleanup (void)
 {	
 	//=================== Post execution ===================//
     ght_set_status_02 ();
+	clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
 	for (uint64_t i = 0; i < NUM_CORES-2; i++) {
 		pthread_join(threads[i], NULL);
 	}
+
+	double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("==== Execution time: %f seconds ==== \r\n", elapsed);
 
 	if (GC_DEBUG == 1){
 		printf("[BOOM-C-%x]: Test is now completed! \r\n", BOOM_ID);

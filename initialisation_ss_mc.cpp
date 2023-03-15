@@ -67,7 +67,7 @@ int main (void)
 	
 	ght_cfg_mapper (0x01, 0b0001);
 
-	printf("[Boom-%x]: Initialisation for ShadowStack-MultiChecker (SS-MC) is now completed, number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
+	printf("[Boom-%x]: Initialisation for ShadowStack-MultiChecker (SS-MC) is now completed. Number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
 	return 0;
 }
 

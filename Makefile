@@ -39,8 +39,8 @@ gc_main_sanitiser: gc_main_sanitiser.c
 gc_main_ss: gc_main_ss.cpp
 	${CPP} ${CFLAGS_CM} -c gc_main_ss.cpp -lpthread
 
-gc_main_ss_mc: gc_main_ss_mc.cpp
-	${CPP} ${CFLAGS_CM} -c gc_main_ss_mc.cpp -lpthread
+gc_main_ss_mc: gc_main_ss_mc.c
+	${CC} ${CFLAGS_CM} -c gc_main_ss_mc.c -lpthread
 
 # checker_ss: checker_ss.cpp
 #	${CPP} ${CFLAGS} -o checker_ss.riscv checker_ss.cpp -lpthread
@@ -59,6 +59,9 @@ tc_shadowstack-s: tc_shadowstack-s.c
 
 tc_shadowstack-m: tc_shadowstack-m.c
 	${CC} ${CFLAGS} -o tc_shadowstack-m.riscv tc_shadowstack-m.c -lpthread
+
+test: test.cpp
+	${CPP} ${CFLAGS} -o test.riscv test.cpp -lpthread
 
 clean:
 	rm -f *.o *.riscv *.so

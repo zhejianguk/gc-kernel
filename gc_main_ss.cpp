@@ -51,7 +51,8 @@ void* thread_shadowstack_gc(void* args){
 			}
 		}
 
-		// Dedicated for shadowstack 
+		// Dedicated for shadowstack
+		/*
 		if (ghe_checkght_status() == 0x04) {
 			ghe_complete();
 			while(ghe_checkght_status() == 0x04) {
@@ -59,6 +60,7 @@ void* thread_shadowstack_gc(void* args){
 			}
 			ghe_go();
 		}
+		*/
 	}
 	//=================== Post execution ===================//
 	ghe_deinitailised();

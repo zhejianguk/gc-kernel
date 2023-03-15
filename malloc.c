@@ -1484,7 +1484,6 @@ int debug = 0;
 
 #define GCKERNEL 1
 #define GCKERNEL_Sani 0
-#define GCKERNEL_SS 1
 
 void poison(void* start, size_t bytes) {
 if (GCKERNEL_Sani == 1) {
@@ -1602,12 +1601,6 @@ Void_t* public_mALLOc(size_t bytes) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    if (GCKERNEL_SS == 1){
-      ght_set_status_04 (); // ght: pause
-      while (ght_get_status() < 0xFFFF) {
-        ght_set_status_04 (); // ght: pause
-      }
-    }
     ght_set_status_00 (); // ght: pause
   }
 }
@@ -1637,12 +1630,6 @@ void public_fREe(Void_t* m) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    if (GCKERNEL_SS == 1){
-      ght_set_status_04 (); // ght: pause
-      while (ght_get_status() < 0xFFFF) {
-        ght_set_status_04 (); // ght: pause
-      }
-    }
     ght_set_status_00 (); // ght: pause
   }
 }
@@ -1696,12 +1683,6 @@ Void_t* public_mEMALIGn(size_t alignment, size_t bytes) {
 if (GCKERNEL == 1){
   asm volatile("fence rw, rw;");
   if (ght_get_initialisation() == 1) {
-    if (GCKERNEL_SS == 1){
-      ght_set_status_04 (); // ght: pause
-      while (ght_get_status() < 0xFFFF) {
-        ght_set_status_04 (); // ght: pause
-      }
-    }
     ght_set_status_00 (); // ght: pause
   }
 }
