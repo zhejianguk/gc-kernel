@@ -1,7 +1,7 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 
-#define MAX 1024
+#define MAX 512
 #define MAX_MASK (MAX-1)
 
 typedef struct dequeue
@@ -60,6 +60,15 @@ static inline uint64_t dequeueF(dequeue *P)  {
   }
   return(x);
 }
+
+static inline void dequeueF_noR(dequeue *P)  {
+  if(P->rear==P->front) {//delete the last element
+    initialize(P);
+  } else {
+    P->front=(P->front+1)&MAX_MASK;
+  }
+}
+
  
 static inline uint64_t dequeueR(dequeue *P) {
   uint64_t x;

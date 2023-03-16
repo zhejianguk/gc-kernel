@@ -116,7 +116,7 @@ static inline uint64_t nxt_target (uint64_t c_current, uint64_t c_start, uint64_
 void* thread_shadowstack_agg_gc(void* args){
 	uint64_t hart_id = (uint64_t) args;
 	uint64_t CurrentTarget = 1;
-
+	uint64_t RTarget[7] = {0, 1, 2, 4, 8, 16, 32};
 	// GC variables
 	uint64_t Header,Payload, PC, Inst;
 	//================== Initialisation ==================//
@@ -142,7 +142,7 @@ void* thread_shadowstack_agg_gc(void* args){
 		while (ghe_status() != GHE_EMPTY){
 			ROCC_INSTRUCTION_D (1, Header, 0x0A);
 			ROCC_INSTRUCTION_D (1, Payload, 0x0D);
-			uint64_t from = Header&0xF;
+			uint64_t from = Header;
 
 			if (from == CurrentTarget) { // Push
 				uint64_t type = Payload & 0x03;
@@ -156,14 +156,14 @@ void* thread_shadowstack_agg_gc(void* args){
 						}
 					}
 				} else {
-					ROCC_INSTRUCTION_S(1, 0x01 << (CurrentTarget-1), 0x21);	// Restart CurrentTarget for scheduling
+					ROCC_INSTRUCTION_S(1, RTarget[CurrentTarget], 0x21);	// Restart CurrentTarget for scheduling
 					CurrentTarget = nxt_target(CurrentTarget, 1, NUM_CORES-2);
 					if (GC_DEBUG){
 						printf("[Rocket-SS-AGG]: == Current Target: %x. == \r\n", CurrentTarget);
 					}
 
 					while ((empty(&queues[CurrentTarget]) == 0) && (queueT(&queues[CurrentTarget]) == 0xFFFFFFFF)) {
-						dequeueF(&queues[CurrentTarget]); // remove the top
+						dequeueF_noR(&queues[CurrentTarget]); // remove the top
 						/* Clear Queue */
 						uint64_t index = CurrentTarget;
 						while (empty(&queues[index]) == 0) {
@@ -182,7 +182,7 @@ void* thread_shadowstack_agg_gc(void* args){
 							}
 						}
 
-						ROCC_INSTRUCTION_S(1, 0x01 << (CurrentTarget-1), 0x21); // Restart CurrentTarget for scheduling
+						ROCC_INSTRUCTION_S(1, RTarget[CurrentTarget], 0x21); // Restart CurrentTarget for scheduling
 						CurrentTarget = nxt_target(CurrentTarget, 1, NUM_CORES-2);
 						if (GC_DEBUG){
 							printf("[Rocket-SS-AGG]: == Current Target: %x. == \r\n", CurrentTarget);
