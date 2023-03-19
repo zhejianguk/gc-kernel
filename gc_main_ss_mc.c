@@ -152,7 +152,7 @@ void* thread_shadowstack_agg_gc(void* args){
 					if (q_empty(&shadow_agg) != 1) {
 						uint64_t comp = q_dequeueF(&shadow_agg) + 1;
 						if (comp != Payload){
-							printf("[Rocket-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
+							printf("[Rocket-AGG1]: **Error** Exp:%x v.s. Pul:%x! \r\n", hart_id, comp>>2, Payload>>2);
 						}
 					}
 				} else {
@@ -176,7 +176,7 @@ void* thread_shadowstack_agg_gc(void* args){
 								if (q_empty(&shadow_agg) != 1) {
 									uint64_t comp_q = q_dequeueF(&shadow_agg) + 1;
 									if (comp_q != Payload_q){
-										printf("[Rocket-SS-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", comp_q>>2, Payload_q>>2);
+										printf("[Rocket-SS-AGG2]: **Error** Exp:%x v.s. Pul:%x! \r\n", comp_q>>2, Payload_q>>2);
 									}
 								}
 							}
@@ -200,7 +200,7 @@ void* thread_shadowstack_agg_gc(void* args){
 							if (q_empty(&shadow_agg) != 1) {
 								uint64_t comp_q = q_dequeueF(&shadow_agg) + 1;
 								if (comp_q != Payload_q){
-									printf("[Rocket-SS-AGG]: **Error** Exp:%x v.s. Pul:%x! \r\n", comp_q>>2, Payload_q>>2);
+									printf("[Rocket-SS-AGG3]: **Error** Exp:%x v.s. Pul:%x! \r\n", comp_q>>2, Payload_q>>2);
 								}
 							}
 						}
@@ -255,7 +255,7 @@ void gcCleanup (void)
     ght_set_status_02 ();
 	clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
-	for (uint64_t i = 0; i < NUM_CORES-2; i++) {
+	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
 	}
 

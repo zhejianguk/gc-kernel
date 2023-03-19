@@ -12,6 +12,7 @@
 #include "libraries/gc_top.h"
 #include "malloc.h"
 #include "sys/mman.h"
+#include <time.h>
 
 
 void gcStartup (void) __attribute__ ((constructor));
@@ -244,6 +245,8 @@ void* thread_sanitiser_gc(void* args){
 	return NULL; 
 }
 
+struct timespec start, end;
+
 void gcStartup (void)
 {
     //================== Initialisation ==================//
@@ -274,7 +277,8 @@ void gcStartup (void)
  	}
 
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
-	asm volatile("fence rw, rw;");
+	clock_gettime(CLOCK_MONOTONIC_RAW, &start); // get start time
+	ght_set_satp_priv();
 	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }
@@ -283,11 +287,16 @@ void gcCleanup (void)
 {	
 	//=================== Post execution ===================//
     ght_set_status_02 ();
+	clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
     // GC threads.
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
 	}
+
+	double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("==== Execution time: %f seconds ==== \r\n", elapsed);
+
 	
 	int s = munmap(shadow, map_size);
 

@@ -10,7 +10,7 @@
 #include "libraries/ght.h"
 #include "libraries/ghe.h"
 #include "libraries/gc_top.h"
-#include "libraries/spin_lock.h"
+#include <time.h>
 
 void gcStartup (void) __attribute__ ((constructor));
 void gcCleanup (void) __attribute__ ((destructor));
@@ -38,6 +38,7 @@ void* thread_pmc_gc(void* args){
 		printf ("[Rocket-C%x-PMC]: pthread_setaffinity failed.", hart_id);
 	}
 
+	ghe_go();
 	ghe_initailised();
 
 	//===================== Execution =====================// 
@@ -97,15 +98,17 @@ void* thread_pmc_gc(void* args){
 		}
 	}
 	//=================== Post execution ===================//
-	if (hart_id == 0){ // Invalid condition, making sure the perfc is not optimised.
+	if (GC_DEBUG == 1){
 		printf("[Rocket-C%x-PMC]: Completed, PMC = %lx! \r\n", hart_id, perfc);
 	}
 
 	ghe_deinitailised();
+	ghe_release();
 
 	return NULL;
 }
 
+struct timespec start, end;
 void gcStartup (void)
 {
     //================== Initialisation ==================//
@@ -122,16 +125,16 @@ void gcStartup (void)
 	while (ght_get_initialisation() == 0){
  	}
 	
-	ght_set_satp_priv();
-	printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
-
- 	// struct sched_param fifo_param;
+	// struct sched_param fifo_param;
   	// fifo_param.sched_priority=99;
  	// int s = pthread_setschedparam(pthread_self(), SCHED_FIFO, &fifo_param);
    	// if (s != 0) {
 	// 	printf("Error: Scheduling policy! %x. \r\n", s);
    	// }
 
+	printf("[Boom-%x]: Test is now started: \r\n", BOOM_ID);
+	clock_gettime(CLOCK_MONOTONIC_RAW, &start); // get start time
+	ght_set_satp_priv();
 	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
 }
@@ -139,11 +142,17 @@ void gcStartup (void)
 void gcCleanup (void)
 {	
 	//=================== Post execution ===================//
-    ght_set_status_02 ();
+	ght_set_status_02 ();
+	clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+
     // GC threads.
 	for (uint64_t i = 0; i < NUM_CORES-1; i++) {
 		pthread_join(threads[i], NULL);
 	}
+
+	double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("==== Execution time: %f seconds ==== \r\n", elapsed);
+
 	
 	if (GC_DEBUG == 1){
 		printf("[Boom-%x]: Test is now completed: \r\n", BOOM_ID);
