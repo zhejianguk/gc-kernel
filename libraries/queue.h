@@ -1,7 +1,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#define QMAX 1024
+#define QMAX 2048
 
 typedef struct queue
 {

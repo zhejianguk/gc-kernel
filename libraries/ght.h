@@ -9,22 +9,40 @@
 #define GHT_FULL 0x02
 #define GHT_EMPTY 0x01
 
-/*
-static inline uint64_t remapping_hart_id (uint64_t hart_id)
-{
-  uint64_t process_id = hart_id;
 
-  return process_id;
-}
-
-
-static inline uint64_t debug_ecounter ()
+/************** Debug features **************/
+uint64_t debug_ecounter ()
 {
   uint64_t ecounter;
   ROCC_INSTRUCTION_D (1, ecounter, 0x22);
   return ecounter;
 }
-*/
+
+uint64_t debug_bp_reset ()
+{
+  ROCC_INSTRUCTION (1, 0x2d);
+}
+
+uint64_t debug_bp_checker ()
+{
+  uint64_t bp_checker;
+  ROCC_INSTRUCTION_D (1, bp_checker, 0x1d);
+  return bp_checker;
+}
+
+uint64_t debug_bp_cdc ()
+{
+  uint64_t bp_cdc;
+  ROCC_INSTRUCTION_D (1, bp_cdc, 0x1e);
+  return bp_cdc;
+}
+
+uint64_t debug_bp_filter ()
+{
+  uint64_t bp_filter;
+  ROCC_INSTRUCTION_D (1, bp_filter, 0x1f);
+  return bp_filter;
+}
 
 
 static inline void ght_set_status_00 ()

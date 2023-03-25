@@ -278,6 +278,7 @@ void gcStartup (void)
 
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
 	clock_gettime(CLOCK_MONOTONIC_RAW, &start); // get start time
+	debug_bp_reset();
 	ght_set_satp_priv();
 	ght_set_status_01 (); // ght: start
     //===================== Execution =====================//
@@ -294,10 +295,26 @@ void gcCleanup (void)
 		pthread_join(threads[i], NULL);
 	}
 
-	double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("==== Execution time: %f seconds ==== \r\n", elapsed);
+	printf("\r\n ======== Execution Report ========\r\n");
 
+	double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+	printf("[Execution time] \r\n");
+	printf("Seconds: %f \r\n \r\n", elapsed);
+   
+    printf("[Backpressure]\r\n");
 	
+	uint64_t bp_checker  = debug_bp_checker();
+    uint64_t bp_cdc = debug_bp_cdc();
+    uint64_t bp_filter = debug_bp_filter();
+
+	printf("Checker: %ld cycles; \r\n", bp_checker);
+	printf("CDC: %ld cycles; \r\n", bp_cdc);
+	printf("Filter: %ld cycles. \r\n", bp_filter);
+
+  	debug_bp_reset();
+	printf("\r\n ======== End of Report ========\r\n");
+
+
 	int s = munmap(shadow, map_size);
 
 	if(s != 0) {

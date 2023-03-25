@@ -1,7 +1,7 @@
 #ifndef GC_TOP_H
 #define GC_TOP_H
 
-#define NUM_CORES 7
+#define NUM_CORES 5
 #define GC_DEBUG 0
 
 #define BOOM_ID 0
@@ -13,7 +13,7 @@
 #define CHK6_ID 6
 #define CHK7_ID 7
 
-#define AGG_CORE_ID 9
+#define AGG_CORE_ID (NUM_CORES-1)
 
 
 
