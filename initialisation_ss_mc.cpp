@@ -67,7 +67,11 @@ int main (void)
 	
 	ght_cfg_mapper (0x01, 0b0001);
 
+	/* Simulating a N-width filter*/
+	ght_debug_filter_width (FILTERWIDTH);
+
 	printf("[Boom-%x]: Initialisation for ShadowStack-MultiChecker (SS-MC) is now completed. Number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
+	printf("[Boom-%x]: Simulating %d-width event filter!\r\n", BOOM_ID, FILTERWIDTH);
 	return 0;
 }
 

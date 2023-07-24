@@ -228,7 +228,7 @@ void* thread_sanitiser_gc(void* args){
 			}
 		}
 
-		// Dedicated for shadowstack 
+		// Dedicated for shadowstack
 		if (ghe_checkght_status() == 0x04) {
 			ghe_complete();
 			while(ghe_checkght_status() == 0x04) {
@@ -254,8 +254,8 @@ void gcStartup (void)
     if (gc_pthread_setaffinity(BOOM_ID) != 0) {
 		printf ("[BOOM-C%x]: pthread_setaffinity failed.", BOOM_ID);
 	}
-	ght_set_satp_priv();
 
+	ght_set_satp_priv();
 	// shadow memory
 	shadow = mmap(NULL,
 				  map_size,
@@ -277,6 +277,13 @@ void gcStartup (void)
  	}
 
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
+	printf("[Boom-C-%x]: Idle for checkers being intialised... \r\n", BOOM_ID);
+	printf("[Boom-C-%x]: Idle for checkers being intialised... \r\n", BOOM_ID);
+	printf("[Boom-C-%x]: Idle for checkers being intialised... \r\n", BOOM_ID);
+
+	ROCC_INSTRUCTION_S (1, 0x02, 0x01); // Enabling FI
+  	ROCC_INSTRUCTION (1, 0x67); // Reset FI
+	
 	clock_gettime(CLOCK_MONOTONIC_RAW, &start); // get start time
 	debug_bp_reset();
 	ght_set_satp_priv();
@@ -312,6 +319,14 @@ void gcCleanup (void)
 	printf("Filter: %ld cycles. \r\n", bp_filter);
 
   	debug_bp_reset();
+
+	printf("[Detection latency (unit: cycles)] \r\n");
+
+	for (int j = 0; j < 0x40; j++) {
+     uint64_t latency = ght_readFIU(j);
+     printf("%d \r\n", latency);
+    }
+
 	printf("\r\n ======== End of Report ========\r\n");
 
 

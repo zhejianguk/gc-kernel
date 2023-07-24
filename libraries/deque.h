@@ -1,7 +1,7 @@
 #ifndef DEQUE_H
 #define DEQUE_H
 
-#define MAX 1024
+#define MAX 256
 #define MAX_MASK (MAX-1)
 
 typedef struct dequeue
@@ -25,7 +25,6 @@ static inline int full(dequeue *P) {
   if((P->rear+1)&MAX_MASK==P->front)
     return(1);
   return(0);
-}
 */
 
 static inline void enqueueR(dequeue *P, uint64_t x) {

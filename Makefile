@@ -9,6 +9,8 @@ CFLAGS_CM:= -O3 -DRISCV -march=rv64imafd -Wl,--allow-multiple-definition
 
 #CC = gcc
 #CFLAGS := -O3 -std=gnu99
+initialisation_none: initialisation_none.c
+	${CC} ${CFLAGS} -o initialisation_none.riscv initialisation_none.c -lpthread
 
 initialisation_pmc: initialisation_pmc.c
 	${CC} ${CFLAGS} -o initialisation_pmc.riscv initialisation_pmc.c -lpthread

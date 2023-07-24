@@ -243,6 +243,9 @@ void gcStartup (void)
  	}
 	
 	printf("[Boom-C-%x]: Test is now started: \r\n", BOOM_ID);
+	ROCC_INSTRUCTION_S (1, 0x02, 0x01); // Enabling FI
+  	ROCC_INSTRUCTION (1, 0x67); // Reset FI
+
 	clock_gettime(CLOCK_MONOTONIC_RAW, &start); // get start time
 	ght_set_satp_priv();
 	ght_set_status_01 (); // ght: start
@@ -261,6 +264,12 @@ void gcCleanup (void)
 
 	double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
     printf("==== Execution time: %f seconds ==== \r\n", elapsed);
+
+	printf("[Detection latency (unit: cycles)] \r\n");
+	for (int j = 0; j < 0x40; j++) {
+     uint64_t latency = ght_readFIU(j);
+     printf("%d \r\n", latency);
+    }
 
 	if (GC_DEBUG == 1){
 		printf("[BOOM-C-%x]: Test is now completed! \r\n", BOOM_ID);

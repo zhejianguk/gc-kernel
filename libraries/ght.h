@@ -18,7 +18,7 @@ uint64_t debug_ecounter ()
   return ecounter;
 }
 
-uint64_t debug_bp_reset ()
+void debug_bp_reset ()
 {
   ROCC_INSTRUCTION (1, 0x2d);
 }
@@ -44,6 +44,13 @@ uint64_t debug_bp_filter ()
   return bp_filter;
 }
 
+void ght_debug_filter_width (uint64_t width)
+{
+  uint64_t set_debug_width;
+  set_debug_width = ((width & 0xf)<<4) | 0x05;
+  ROCC_INSTRUCTION_SS (1, set_debug_width, 0X02, 0x06);
+}
+/************** End of Debug features **************/
 
 static inline void ght_set_status_00 ()
 {
@@ -204,3 +211,13 @@ static inline uint64_t ght_get_initialisation ()
   ROCC_INSTRUCTION_D (1, get_status, 0x1b);
   return get_status;
 }
+
+
+ static inline uint64_t ght_readFIU (uint64_t sel)
+ {
+   uint64_t latency;
+
+   ROCC_INSTRUCTION_DS (1, latency, sel, 0x68);
+
+   return latency;
+ }

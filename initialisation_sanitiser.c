@@ -52,8 +52,12 @@ void main (void)
   	ght_cfg_se (0x00, NUM_CORES-1, 0x01, 0x01);
 
 	ght_cfg_mapper (0x01, 0b0001);
+	
+	/* Simulating a N-width filter*/
+	ght_debug_filter_width (FILTERWIDTH);
 
 	printf("[Boom-%x]: Initialisation for Sanitiser is now completed, number of Checkers: %d!\r\n", BOOM_ID, NUM_CORES-1);
+	printf("[Boom-%x]: Simulating %d-width event filter!\r\n", BOOM_ID, FILTERWIDTH);
 
 }
 
