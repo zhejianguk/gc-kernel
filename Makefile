@@ -5,7 +5,7 @@ OFLAGS := -O3 -DRISCV -march=rv64imafd -DUSE_PUBLIC_MALLOC_WRAPPERS
 CFLAGS:= -O3 -DRISCV -march=rv64imafd
 
 CFLAGS_CM:= -O3 -DRISCV -march=rv64imafd -Wl,--allow-multiple-definition
-
+CFLAGS_MS:= -fpic -std=c++17
 
 #CC = gcc
 #CFLAGS := -O3 -std=gnu99
@@ -17,6 +17,9 @@ initialisation_pmc: initialisation_pmc.c
 
 initialisation_sanitiser: initialisation_sanitiser.c
 	${CC} ${CFLAGS} -o initialisation_sanitiser.riscv initialisation_sanitiser.c -lpthread
+
+initialisation_minesweeper: initialisation_minesweeper.c
+	${CC} ${CFLAGS} -o initialisation_minesweeper.riscv initialisation_minesweeper.c -lpthread
 
 initialisation_ss: initialisation_ss.cpp
 	${CPP} ${CFLAGS} -o initialisation_ss.riscv initialisation_ss.cpp -lpthread
@@ -43,6 +46,9 @@ gc_main_ss: gc_main_ss.cpp
 
 gc_main_ss_mc: gc_main_ss_mc.c
 	${CC} ${CFLAGS_CM} -c gc_main_ss_mc.c -lpthread
+
+gc_main_minesweeper: gc_main_minesweeper.cpp
+	${CPP} ${CFLAGS_CM} ${CFLAGS_MS} -c gc_main_minesweeper.cpp -lpthread 
 
 # checker_ss: checker_ss.cpp
 #	${CPP} ${CFLAGS} -o checker_ss.riscv checker_ss.cpp -lpthread

@@ -1,3 +1,6 @@
+#ifndef __GHT_H_INCLUDED_
+#define __GHT_H_INCLUDED_
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "rocc.h"
@@ -11,40 +14,40 @@
 
 
 /************** Debug features **************/
-uint64_t debug_ecounter ()
+static inline uint64_t debug_ecounter ()
 {
   uint64_t ecounter;
   ROCC_INSTRUCTION_D (1, ecounter, 0x22);
   return ecounter;
 }
 
-void debug_bp_reset ()
+static inline void debug_bp_reset ()
 {
   ROCC_INSTRUCTION (1, 0x2d);
 }
 
-uint64_t debug_bp_checker ()
+static inline uint64_t debug_bp_checker ()
 {
   uint64_t bp_checker;
   ROCC_INSTRUCTION_D (1, bp_checker, 0x1d);
   return bp_checker;
 }
 
-uint64_t debug_bp_cdc ()
+static inline uint64_t debug_bp_cdc ()
 {
   uint64_t bp_cdc;
   ROCC_INSTRUCTION_D (1, bp_cdc, 0x1e);
   return bp_cdc;
 }
 
-uint64_t debug_bp_filter ()
+static inline uint64_t debug_bp_filter ()
 {
   uint64_t bp_filter;
   ROCC_INSTRUCTION_D (1, bp_filter, 0x1f);
   return bp_filter;
 }
 
-void ght_debug_filter_width (uint64_t width)
+static inline void ght_debug_filter_width (uint64_t width)
 {
   uint64_t set_debug_width;
   set_debug_width = ((width & 0xf)<<4) | 0x05;
@@ -221,3 +224,5 @@ static inline uint64_t ght_get_initialisation ()
 
    return latency;
  }
+
+ #endif 

@@ -1483,7 +1483,7 @@ extern int uart_lock;
 int debug = 0;
 
 #define GCKERNEL 1
-#define GCKERNEL_Sani 0
+#define GCKERNEL_Sani 1
 
 void poison(void* start, size_t bytes) {
 if (GCKERNEL_Sani == 1) {
